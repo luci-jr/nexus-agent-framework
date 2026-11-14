@@ -1,0 +1,22 @@
+# Binários
+bin/
+*.exe
+nexus-console/nexus-console
+nexus-mcp/nexus-mcp
+
+# Dependências e Builds
+dist/
+vendor/
+*.log
+
+# Variáveis locais e dados sensíveis
+.env
+.env.local
+*.pem
+*.key
+.console_pass
+
+# IDEs e OS
+.vscode/
+.idea/
+.DS_Store
