@@ -243,23 +243,17 @@ Distribuído sob a licença **MIT**. Consulte [`LICENSE`](LICENSE) para mais det
 
 <img src="docs/assets/author_card.png" alt="Lucivaldo Junior - Terminal Profile" width="850" style="border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);" />
 
-</div>
+<br/><br/>
 
-<br/>
-
-<div align="left">
-
-**Lucivaldo Junior (Luci Junior)**  
+### Lucivaldo Junior (Luci Junior)  
 *Engenheiro de Software Back-end & Arquiteto de Sistemas | Belém do Pará — Amazônia, Brasil*
 
 > *"Da pressão contínua das cozinhas profissionais por mais de 15 anos para a engenharia de software de alta performance: trago a disciplina operacional da gastronomia, a calma sob pressão e o foco intransigente em entregar sistemas sólidos, leves e que resolvem problemas reais."*
 
-* **Stack Principal:** Go (Golang 1.22+) • Java 21 (Spring Boot 3) • PostgreSQL • Docker & Swarm • Nuvem AWS (AWS Certified)
-* **Projeto:** Criador & Arquiteto do **Nexus Agent Framework**
+**Stack Principal:** Go (Golang 1.22+) • Java 21 (Spring Boot 3) • PostgreSQL • Docker & Swarm • Nuvem AWS (AWS Certified)  
+**Projeto:** Criador & Arquiteto do **Nexus Agent Framework**
 
----
-
-### 🌐 Conecte-se Comigo
+<br/>
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/lucivaldojr)
 [![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/luci-jr)
