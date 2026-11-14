@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="docs/assets/nexus_logo.png" alt="Nexus Agent Framework Logo" width="160" />
-
 # ⚛️ Nexus Agent Framework
 
 ### *Framework Open Source de Orquestração de Agentes Autônomos, MCP e Squad de Engenharia em Go Nativo*
@@ -26,12 +24,6 @@
   <a href="#-autor--arquiteto">Autor</a>
 </p>
 
----
-
-<img src="docs/assets/dashboard_preview.png" alt="Nexus Web Console Dashboard" width="850" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);" />
-
-*O Nexus Web Console rodando localmente em Go puro na porta 8090 com UI embutida e telemetria em tempo real.*
-
 </div>
 
 ---
@@ -51,10 +43,6 @@ Diferente de frameworks tradicionais que dependem de centenas de megabytes de de
 ---
 
 ## 🏛️ 2. Arquitetura do Sistema
-
-<div align="center">
-  <img src="docs/assets/architecture_preview.png" alt="Nexus Architecture Diagram" width="550" style="border-radius: 8px;" />
-</div>
 
 ```text
                            ┌────────────────────────────────────────┐
@@ -124,7 +112,7 @@ nexus-agent-framework/
 ├── 🖥️ nexus-console/                 # Dashboard Web de Governança em Go Nativo (Porta 8090)
 │   ├── internal/                  # Parsers de markdown, bridge de telemetria e SSE
 │   ├── web/                       # Single Page App (Tailwind CSS, Lucide Icons, Vanilla JS)
-│   │   ├── assets/                # Imagens de fundo e identidade visual
+│   │   ├── assets/                # Imagens e favicons oficiais do reator ⚛️
 │   │   ├── css/ & js/             # Estilos e módulos reativos da UI
 │   │   └── index.html             # Interface web embutida via //go:embed
 │   ├── main.go                    # Ponto de entrada do serviço HTTP local
@@ -141,13 +129,12 @@ nexus-agent-framework/
 │   ├── skill-builder              # Forjador de Agent Skills sob a Regra dos 3X
 │   └── premium-ui-landing-page    # Design System e landing pages de alta conversão
 │
-├── 📁 docs/                         # Documentação, Tutoriais e Assets Visuais
-│   ├── tutoriais/                 # Trilha de onboarding passo a passo
-│   │   ├── 01_instalacao_e_setup_local.md # Setup do zero em 3 minutos
-│   │   ├── 02_conectando_ao_seu_agente.md # Conexão MCP com Claude, Antigravity e Cursor
-│   │   ├── 03_usando_o_squad_de_especialistas.md # Orquestração do squad e prompts
-│   │   └── 04_acesso_remoto_celular_gratuito.md # Acesso 4G/5G com Tailscale
-│   └── assets/                    # Prints de demonstração e logos oficiais
+├── 📁 docs/                         # Documentação e Tutoriais Oficiais
+│   └── tutoriais/                 # Trilha de onboarding passo a passo
+│       ├── 01_instalacao_e_setup_local.md # Setup do zero em 3 minutos
+│       ├── 02_conectando_ao_seu_agente.md # Conexão MCP com Claude, Antigravity e Cursor
+│       ├── 03_usando_o_squad_de_especialistas.md # Orquestração do squad e prompts
+│       └── 04_acesso_remoto_celular_gratuito.md # Acesso 4G/5G com Tailscale
 │
 ├── ⚙️ .mcp.json                     # Manifesto de registro MCP portátil (caminho relativo)
 ├── 📄 .env.example                  # Modelo de variáveis de ambiente configuráveis
