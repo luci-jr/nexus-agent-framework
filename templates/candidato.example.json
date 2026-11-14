@@ -1,0 +1,42 @@
+{
+  "dados_pessoais": {
+    "nome_completo": "Seu Nome Completo Aqui",
+    "primeiro_nome": "SeuNome",
+    "sobrenome": "SeuSobrenome",
+    "email": "seu.email@exemplo.com",
+    "telefone_formatado": "(11) 99999-9999",
+    "cidade": "Sua Cidade",
+    "estado": "Seu Estado",
+    "sigla_estado": "SP",
+    "pais": "Brasil",
+    "localizacao_resumo": "São Paulo, SP — Brasil"
+  },
+  "links_profissionais": {
+    "linkedin": "https://www.linkedin.com/in/seu-usuario",
+    "github": "https://github.com/seu-usuario",
+    "portfolio": "https://seu-portfolio.com"
+  },
+  "curriculos_pdf": {
+    "padrao": "./meus_documentos/CV_Principal.pdf",
+    "backend": "./meus_documentos/CV_Backend.pdf",
+    "frontend": "./meus_documentos/CV_Frontend.pdf"
+  },
+  "compliance_e_preferencias": {
+    "modalidade_aceita": ["100% Remoto", "Híbrido"],
+    "regime_contrato": ["CLT", "PJ"],
+    "pretensao_salarial": {
+      "clt_alvo": 6000,
+      "pj_minima": 5000,
+      "pj_alvo": 7000
+    },
+    "beneficios_indispensaveis": [
+      "Plano de saúde",
+      "Ajuda de custo para home office"
+    ]
+  },
+  "stacks_dominadas": {
+    "primarias": ["Go", "PostgreSQL", "Docker", "Linux"],
+    "secundarias": ["Java", "Spring Boot", "AWS", "Angular"],
+    "em_estudo": ["Kubernetes", "Kafka"]
+  }
+}

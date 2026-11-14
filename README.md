@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚛️ Nexus Agent Framework
+# 🌌 Nexus Agent Framework
 
 ### *Framework Open Source de Orquestração de Agentes Autônomos, MCP e Squad de Engenharia em Go Nativo*
 
@@ -86,61 +86,55 @@ A árvore abaixo reflete a organização modular do repositório:
 
 ```text
 nexus-agent-framework/
-├── 👥 agents/                       # Catálogo de Personas do Squad Especialista
-│   ├── lucy.md                    # Lucy: Tech Lead Sênior, Mentora Socrática & Arquiteta
-│   ├── backend.md                 # Go 1.22+, Java 21, Spring Boot 3, Redis & PostgreSQL
-│   ├── frontend.md                # Angular 21+, Signals, TypeScript, CSS3 e Design Systems
-│   ├── sysops.md                  # Linux Ubuntu, Docker Swarm, Traefik v3, Redes e Nuvem
-│   ├── qa.md                      # Engenheiro de Qualidade, JUnit 5, Playwright e k6
-│   ├── secops.md                  # DevSecOps, Segurança da Informação, SCA/SAST e CVEs
-│   ├── suporte.md                 # Suporte Técnico N2/N3, Automação Comercial e SQL
-│   ├── bi.md                      # Business Intelligence, SQL Analítico e Métricas
-│   ├── finops.md                  # Cloud FinOps, Arbitragem Multi-Cloud e Gestão de TCO
-│   ├── frellas.md                 # Consultor de Carreira, ATS Score e Propostas PJ
-│   └── webmaster.md               # CMS, WordPress, WooCommerce e Landing Pages
+├── 👥 agents/              # Catálogo de Personas do Squad (10 Copilotos Especialistas)
+│   ├── lucy.md             # Lucy: Tech Lead Sênior, Mentora Socrática & Arquiteta
+│   ├── backend.md          # Go 1.22+, Java 21, Spring Boot 3, Redis & PostgreSQL
+│   ├── frontend.md         # Angular 21+, Signals, TypeScript, CSS3 e Design Systems
+│   ├── sysops.md           # Linux Ubuntu, Docker Swarm, Traefik v3, Redes e Nuvem
+│   ├── qa.md               # Engenheiro de Qualidade, JUnit 5, Playwright e k6
+│   ├── secops.md           # DevSecOps, Segurança da Informação, SCA/SAST e CVEs
+│   ├── suporte.md          # Suporte Técnico N2/N3, Automação Comercial e SQL
+│   ├── bi.md               # Business Intelligence, SQL Analítico e Métricas
+│   ├── finops.md           # Cloud FinOps, Arbitragem Multi-Cloud e Gestão de TCO
+│   ├── frellas.md          # Consultor de Carreira, ATS Score e Propostas PJ
+│   └── webmaster.md        # CMS, WordPress, WooCommerce e Landing Pages
 │
-├── ⚡ nexus-mcp/                     # Servidor MCP v3.1 em Go Nativo
-│   ├── internal/                  # Ferramentas nativas, telemetria e governança
-│   │   ├── config/                # Resolução dinâmica de caminhos e ambiente
-│   │   ├── prompts/               # Templates padronizados de prompts MCP
-│   │   ├── resources/             # Recursos nativos do protocolo (nexus://)
-│   │   └── tools/                 # Ferramentas de auditoria de DoD, status e grafo
-│   ├── main.go                    # Ponto de entrada do protocolo via canal stdio
-│   ├── go.mod & go.sum            # Gerenciamento de dependências Go puras
-│   └── Makefile                   # Automações de compilação e testes unitários
+├── ⚡ nexus-mcp/            # Servidor MCP v3.1 em Go Nativo
+│   ├── internal/           # Ferramentas nativas, telemetria e governança
+│   ├── main.go             # Ponto de entrada do protocolo via canal stdio
+│   ├── go.mod & go.sum     # Gerenciamento de dependências Go puras
+│   └── Makefile            # Automações de compilação e testes unitários
 │
-├── 🖥️ nexus-console/                 # Dashboard Web de Governança em Go Nativo (Porta 8090)
-│   ├── internal/                  # Parsers de markdown, bridge de telemetria e SSE
-│   ├── web/                       # Single Page App (Tailwind CSS, Lucide Icons, Vanilla JS)
-│   │   ├── assets/                # Imagens e favicons oficiais do reator ⚛️
-│   │   ├── css/ & js/             # Estilos e módulos reativos da UI
-│   │   └── index.html             # Interface web embutida via //go:embed
-│   ├── main.go                    # Ponto de entrada do serviço HTTP local
-│   ├── Dockerfile                 # Empacotamento em container minimalista (<15MB RAM)
-│   └── Makefile                   # Compilação e execução rápida
+├── 🖥️ nexus-console/        # Dashboard Web de Governança em Go Nativo (Porta 8090)
+│   ├── internal/           # Parsers de markdown, bridge de telemetria e SSE
+│   ├── web/                # Single Page App (Tailwind CSS, Lucide Icons, Vanilla JS)
+│   ├── main.go             # Ponto de entrada do serviço HTTP local com //go:embed
+│   ├── Dockerfile          # Empacotamento em container minimalista (<15MB RAM)
+│   └── Makefile            # Compilação e execução rápida
 │
-├── 🎯 skills/                       # Biblioteca de Habilidades Especializadas de Engenharia
-│   ├── angular-signals-architect  # Reatividade moderna em Angular 21+ com Signals e Standalone
-│   ├── docker-swarm-traefik-ops   # Operação de Swarm, Traefik, redes overlay e isolamento
-│   ├── go-concurrency-patterns    # Concorrência em Go 1.22+, goroutines, context e mutexes
-│   ├── postgres-data-engineering  # Concorrência transacional, query tuning e locks pessimistas
+├── 🎯 skills/              # Biblioteca de Habilidades Especializadas de Engenharia
+│   ├── angular-signals-architect  # Reatividade em Angular 21+ com Signals e Standalone
+│   ├── docker-swarm-traefik-ops   # Operação de Swarm, Traefik, redes overlay e proxy
+│   ├── go-concurrency-patterns    # Concorrência em Go 1.22+, goroutines e mutexes
+│   ├── postgres-data-engineering  # Concorrência transacional, query tuning e locks
 │   ├── spring-boot-enterprise     # Padrões corporativos Java 21 LTS e Spring Boot 3
 │   ├── ub-mode                    # Disciplina estrita de Clean Code e TDD (Uncle Bob)
 │   ├── skill-builder              # Forjador de Agent Skills sob a Regra dos 3X
 │   └── premium-ui-landing-page    # Design System e landing pages de alta conversão
 │
-├── 📁 docs/                         # Documentação e Tutoriais Oficiais
-│   └── tutoriais/                 # Trilha de onboarding passo a passo
-│       ├── 01_instalacao_e_setup_local.md # Setup do zero em 3 minutos
-│       ├── 02_conectando_ao_seu_agente.md # Conexão MCP com Claude, Antigravity e Cursor
-│       ├── 03_usando_o_squad_de_especialistas.md # Orquestração do squad e prompts
-│       └── 04_acesso_remoto_celular_gratuito.md # Acesso 4G/5G com Tailscale
+├── 📁 docs/                # Documentação e Tutoriais Oficiais
+│   ├── tutoriais/          # Trilha de onboarding passo a passo
+│   │   ├── 01_instalacao_e_setup_local.md         # Setup do zero em 3 minutos
+│   │   ├── 02_conectando_ao_seu_agente.md         # Conexão MCP (Claude, Cursor, AGY)
+│   │   ├── 03_usando_o_squad_de_especialistas.md  # Orquestração do squad e prompts
+│   │   └── 04_acesso_remoto_celular_gratuito.md   # Acesso 4G/5G com Tailscale
+│   └── assets/             # Assets e cards visuais do framework
 │
-├── ⚙️ .mcp.json                     # Manifesto de registro MCP portátil (caminho relativo)
-├── 📄 .env.example                  # Modelo de variáveis de ambiente configuráveis
-├── 📜 Makefile                      # Orquestrador mestre (make build, make run-console, make test)
-├── 🔒 LICENSE                       # Licença MIT Oficial
-└── 📄 README.md                     # Este documento mestre unificado
+├── ⚙️ .mcp.json            # Manifesto de registro MCP portátil (caminho relativo)
+├── 📄 .env.example         # Modelo de variáveis de ambiente configuráveis
+├── 📜 Makefile             # Orquestrador mestre (make build, make run-console, make test)
+├── 🔒 LICENSE              # Licença MIT Oficial
+└── 📄 README.md            # Este documento mestre unificado
 ```
 
 ---
@@ -230,6 +224,14 @@ Distribuído sob a licença **MIT**. Consulte [`LICENSE`](LICENSE) para mais det
 ---
 
 ## 👨‍💻 Autor & Arquiteto
+
+<div align="center">
+
+<img src="docs/assets/author_card.png" alt="Lucivaldo Junior - Terminal Profile" width="850" style="border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);" />
+
+</div>
+
+<br/>
 
 <div align="left">
 
