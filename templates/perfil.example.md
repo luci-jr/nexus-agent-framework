@@ -35,3 +35,4 @@ Descreva em 1 ou 2 parágrafos o seu foco de carreira, a sua senioridade atual (
 ## 🎓 FORMAÇÃO & CERTIFICAÇÕES
 - **Graduação:** [Seu Curso] — [Instituição] (Ano de Conclusão)
 - **Certificações:** [Ex: AWS Certified Cloud Practitioner, Oracle Certified Java, etc.]
+

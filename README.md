@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🌌 Nexus Agent Framework
+<img src="docs/assets/nexus_logo.png" alt="Nexus Logo" width="100" />
+
+# Nexus Agent Framework
 
 ### *Framework Open Source de Orquestração de Agentes Autônomos, MCP e Squad de Engenharia em Go Nativo*
 
@@ -18,9 +20,10 @@
   <a href="#-3-estrutura-de-diretórios-consolidada">Estrutura</a> •
   <a href="#-4-o-squad-de-copilotos-especialistas">Squad</a> •
   <a href="#-5-catálogo-do-servidor-mcp-nativo">MCP Tools</a> •
-  <a href="#-6-trilha-de-tutoriais-oficiais-onboarding">Tutoriais</a> •
-  <a href="#-7-acesso-remoto-pelo-celular-custo-zero">Acesso Móvel</a> •
-  <a href="#-8-quickstart-em-3-minutos">Quickstart</a> •
+  <a href="#-6-personalização-perfil-e-currículo">Personalização</a> •
+  <a href="#-7-trilha-de-tutoriais-oficiais-onboarding">Tutoriais</a> •
+  <a href="#-8-acesso-remoto-pelo-celular-custo-zero">Acesso Móvel</a> •
+  <a href="#-9-quickstart-em-3-minutos">Quickstart</a> •
   <a href="#-autor--arquiteto">Autor</a>
 </p>
 
@@ -122,13 +125,19 @@ nexus-agent-framework/
 │   ├── skill-builder              # Forjador de Agent Skills sob a Regra dos 3X
 │   └── premium-ui-landing-page    # Design System e landing pages de alta conversão
 │
+├── 📋 templates/           # Modelos de Personalização para Novos Usuários
+│   ├── perfil.example.md          # Modelo para preencher stacks, senioridade e bio
+│   ├── candidato.example.json     # Modelo para análise de vagas com IA e match de ATS
+│   └── preferencias.example.md    # Configuração de estilo de resposta dos agentes
+│
 ├── 📁 docs/                # Documentação e Tutoriais Oficiais
 │   ├── tutoriais/          # Trilha de onboarding passo a passo
 │   │   ├── 01_instalacao_e_setup_local.md         # Setup do zero em 3 minutos
 │   │   ├── 02_conectando_ao_seu_agente.md         # Conexão MCP (Claude, Cursor, AGY)
 │   │   ├── 03_usando_o_squad_de_especialistas.md  # Orquestração do squad e prompts
-│   │   └── 04_acesso_remoto_celular_gratuito.md   # Acesso 4G/5G com Tailscale
-│   └── assets/             # Assets e cards visuais do framework
+│   │   ├── 04_acesso_remoto_celular_gratuito.md   # Acesso 4G/5G com Tailscale
+│   │   └── 05_personalizacao_perfil_e_curriculo.md # Como customizar o framework
+│   └── assets/             # Assets e card do autor oficial
 │
 ├── ⚙️ .mcp.json            # Manifesto de registro MCP portátil (caminho relativo)
 ├── 📄 .env.example         # Modelo de variáveis de ambiente configuráveis
@@ -173,22 +182,27 @@ O **Nexus MCP Server** implementa o protocolo oficial da Anthropic (*Model Conte
 
 ---
 
-## 📚 6. Trilha de Tutoriais Oficiais (Onboarding)
+## 👤 6. Personalização: Perfil e Currículo
 
-Preparamos uma trilha mastigada passo a passo para você dominar o framework em minutos:
+O framework vem com modelos prontos na pasta [`templates/`](templates/) para que você adapte o sistema à sua realidade:
 
-* 📖 **[Tutorial 01: Instalação e Setup Local do Zero](docs/tutoriais/01_instalacao_e_setup_local.md)**
-  *Pré-requisitos mínimos, compilação com 1 comando e inicialização do console.*
-* 🔌 **[Tutorial 02: Conectando o Nexus MCP aos seus Agentes](docs/tutoriais/02_conectando_ao_seu_agente.md)**
-  *Configuração no Claude Code, Antigravity CLI, Cursor IDE e Claude Desktop.*
-* 👥 **[Tutorial 03: Orquestrando o Squad de Agentes Especialistas](docs/tutoriais/03_usando_o_squad_de_especialistas.md)**
-  *Fluxo de Spec-Driven Development (TDD + Clean Code) e prompts reais prontos.*
-* 📱 **[Tutorial 04: Acesso Remoto no Celular Fora de Casa (100% Gratuito)](docs/tutoriais/04_acesso_remoto_celular_gratuito.md)**
-  *Como conectar seu celular via 4G/5G com Tailscale ou Cloudflare Tunnel sem abrir portas.*
+1. **`templates/perfil.example.md`:** Preencha seu histórico, linguagens e objetivos para que a Lucy adapte o código à sua senioridade.
+2. **`templates/candidato.example.json`:** Configure suas pretensões salariais e preferências de trabalho para o copiloto Frellas auditar vagas para você.
+3. **`templates/preferencias.example.md`:** Defina o tom de resposta dos agentes (método socrático, direto ao ponto ou formal).
 
 ---
 
-## 📱 7. Acesso Remoto pelo Celular (Custo Zero)
+## 📚 7. Trilha de Tutoriais Oficiais (Onboarding)
+
+* 📖 **[Tutorial 01: Instalação e Setup Local do Zero](docs/tutoriais/01_instalacao_e_setup_local.md)**
+* 🔌 **[Tutorial 02: Conectando o Nexus MCP aos seus Agentes](docs/tutoriais/02_conectando_ao_seu_agente.md)**
+* 👥 **[Tutorial 03: Orquestrando o Squad de Agentes Especialistas](docs/tutoriais/03_usando_o_squad_de_especialistas.md)**
+* 📱 **[Tutorial 04: Acesso Remoto no Celular Fora de Casa (100% Gratuito)](docs/tutoriais/04_acesso_remoto_celular_gratuito.md)**
+* 👤 **[Tutorial 05: Personalizando Seu Perfil, Currículo e Preferências](docs/tutoriais/05_personalizacao_perfil_e_curriculo.md)**
+
+---
+
+## 📱 8. Acesso Remoto pelo Celular (Custo Zero)
 
 Acesse o **Nexus Web Console** no smartphone quando estiver na rua ou viajando:
 
@@ -198,7 +212,7 @@ Acesse o **Nexus Web Console** no smartphone quando estiver na rua ou viajando:
 
 ---
 
-## 🚀 8. Quickstart em 3 Minutos
+## 🚀 9. Quickstart em 3 Minutos
 
 ```bash
 # 1. Clonar o repositório:
@@ -241,7 +255,7 @@ Distribuído sob a licença **MIT**. Consulte [`LICENSE`](LICENSE) para mais det
 > *"Da pressão contínua das cozinhas profissionais por mais de 15 anos para a engenharia de software de alta performance: trago a disciplina operacional da gastronomia, a calma sob pressão e o foco intransigente em entregar sistemas sólidos, leves e que resolvem problemas reais."*
 
 * **Stack Principal:** Go (Golang 1.22+) • Java 21 (Spring Boot 3) • PostgreSQL • Docker & Swarm • Nuvem AWS (AWS Certified)
-* **Ecossistema:** Criador do **Nexus Ecosystem** & **Nexus Agent Framework**
+* **Projeto:** Criador & Arquiteto do **Nexus Agent Framework**
 
 ---
 

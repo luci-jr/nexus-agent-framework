@@ -17,3 +17,4 @@ Este arquivo define como a **Lucy (Orquestradora)** e os copilotos devem se comp
 * **Qualidade de Código:** [TDD obrigatório em regras de negócio críticas e Clean Architecture]
 * **Segurança:** [Proibido comitar arquivos `.env`, chaves privadas ou tokens no Git]
 * **Autonomia do Agente:** [A Lucy tem autonomia para decidir a melhor abordagem de software sem me travar com perguntas desnecessárias]
+
