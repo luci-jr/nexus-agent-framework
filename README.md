@@ -4,7 +4,7 @@
 
 # Nexus Agent Framework
 
-### _Framework Open Source de Orquestração de Agentes Autônomos, MCP e Squad de Engenharia em Go Nativo_
+### *Framework Open Source de Orquestração de Agentes Autônomos, MCP e Squad de Engenharia em Go Nativo*
 
 [![Linux Ubuntu](https://img.shields.io/badge/OS-Linux%20Ubuntu-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)](https://ubuntu.com/)
 [![macOS & Windows](https://img.shields.io/badge/OS-macOS%20%7C%20Windows%20WSL2-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/luci-jr/nexus-agent-framework)
@@ -37,11 +37,11 @@ O **Nexus Agent Framework** é uma plataforma open-source de alta performance pr
 
 Diferente de frameworks tradicionais que dependem de centenas de megabytes de dependências Python ou Node.js, o Nexus foi concebido sob o princípio da **homogeneidade e leveza em Go**:
 
-- ⚡ **Ultra Leve & Baixo Consumo (< 20 MB de RAM):** Construído 100% em Go 1.22+ puro, com tempo de inicialização de milissegundos e sem necessidade de máquinas pesadas.
-- 📦 **Binário Único & Auto-Contido:** O frontend do Dashboard Web (Single Page App em Vanilla JS + Tailwind CSS) é compilado diretamente dentro do binário executável via `//go:embed`.
-- 🔌 **Model Context Protocol (MCP) Nativo:** Expõe ferramentas seguras de auditoria de código, verificação de critérios de aceite (_DoD_), status de infraestrutura e memória local via canal `stdio`.
-- 👥 **Squad Especialista Integrado:** 10 copilotos com instruções de engenharia disciplinadas (TDD estrito, Clean Architecture, Uncle Bob e Spec-Driven Development).
-- 📱 **PWA & Acesso Remoto Gratuito:** Acesse o console pelo celular no 4G/5G com **Tailscale** ou **Cloudflare Tunnel** com custo zero e sem abrir portas no roteador.
+* ⚡ **Ultra Leve & Baixo Consumo (< 20 MB de RAM):** Construído 100% em Go 1.22+ puro, com tempo de inicialização de milissegundos e sem necessidade de máquinas pesadas.
+* 📦 **Binário Único & Auto-Contido:** O frontend do Dashboard Web (Single Page App em Vanilla JS + Tailwind CSS) é compilado diretamente dentro do binário executável via `//go:embed`.
+* 🔌 **Model Context Protocol (MCP) Nativo:** Expõe ferramentas seguras de auditoria de código, verificação de critérios de aceite (*DoD*), status de infraestrutura e memória local via canal `stdio`.
+* 👥 **Squad Especialista Integrado:** 10 copilotos com instruções de engenharia disciplinadas (TDD estrito, Clean Architecture, Uncle Bob e Spec-Driven Development).
+* 📱 **PWA & Acesso Remoto Gratuito:** Acesse o console pelo celular no 4G/5G com **Tailscale** ou **Cloudflare Tunnel** com custo zero e sem abrir portas no roteador.
 
 ---
 
@@ -152,33 +152,33 @@ nexus-agent-framework/
 
 O framework fornece **10 agentes especialistas prontos para uso**. Cada copiloto possui diretrizes rigorosas para atuar dentro do seu domínio técnico, eliminando alucinações e dispersão de escopo:
 
-|    Copiloto     | Stack Principal                       | Foco de Atuação                                                      |
-| :-------------: | :------------------------------------ | :------------------------------------------------------------------- |
-|   🧠 **Lucy**   | Tech Lead & Orquestradora             | Governança arquitetural, mentoria socrática, P.O. e validação de DoD |
-| ☕ **Backend**  | Go 1.22+ • Java 21 • Spring Boot 3    | Microsserviços concorrentes, APIs corporativas, Redis e PostgreSQL   |
-| 🅰️ **Frontend** | Angular 21+ • Signals • Standalone    | Interfaces reativas sem zone.js, componentes standalone e UX         |
-|    🧪 **QA**    | Playwright • JUnit 5 • Testcontainers | Pirâmide de testes automatizados, testes de carga e confiabilidade   |
-|  🛡️ **SecOps**  | DevSecOps • SCA/SAST • CVEs           | Auditoria de dependências, sanitização e blindagem de segurança      |
-|  🐧 **SysOps**  | Linux Ubuntu • Docker Swarm • Traefik | Redes overlay, proxy reverso, systemd e infraestrutura               |
-|    📊 **BI**    | PostgreSQL • SQL Analítico            | Dashboards operacionais, relatórios executivos e métricas            |
-|  💰 **FinOps**  | Multi-Cloud • AWS • OCI • TCO         | Gestão financeira de nuvem, arbitramentos e corte de ociosidade      |
-| 🎫 **Suporte**  | N2/N3 • Automação Comercial • SQL     | Sustentação, resolução de incidentes e conciliação de dados          |
-| 💼 **Frellas**  | Tech Recruiter • ATS Score • Pitch    | Triagem de propostas, adequação de CV e contratos PJ                 |
+| Copiloto | Stack Principal | Foco de Atuação |
+| :---: | :--- | :--- |
+| 🧠 **Lucy** | Tech Lead & Orquestradora | Governança arquitetural, mentoria socrática, P.O. e validação de DoD |
+| ☕ **Backend** | Go 1.22+ • Java 21 • Spring Boot 3 | Microsserviços concorrentes, APIs corporativas, Redis e PostgreSQL |
+| 🅰️ **Frontend** | Angular 21+ • Signals • Standalone | Interfaces reativas sem zone.js, componentes standalone e UX |
+| 🧪 **QA** | Playwright • JUnit 5 • Testcontainers | Pirâmide de testes automatizados, testes de carga e confiabilidade |
+| 🛡️ **SecOps** | DevSecOps • SCA/SAST • CVEs | Auditoria de dependências, sanitização e blindagem de segurança |
+| 🐧 **SysOps** | Linux Ubuntu • Docker Swarm • Traefik | Redes overlay, proxy reverso, systemd e infraestrutura |
+| 📊 **BI** | PostgreSQL • SQL Analítico | Dashboards operacionais, relatórios executivos e métricas |
+| 💰 **FinOps** | Multi-Cloud • AWS • OCI • TCO | Gestão financeira de nuvem, arbitramentos e corte de ociosidade |
+| 🎫 **Suporte** | N2/N3 • Automação Comercial • SQL | Sustentação, resolução de incidentes e conciliação de dados |
+| 💼 **Frellas** | Tech Recruiter • ATS Score • Pitch | Triagem de propostas, adequação de CV e contratos PJ |
 
 ---
 
 ## ⚡ 5. Catálogo do Servidor MCP Nativo
 
-O **Nexus MCP Server** implementa o protocolo oficial da Anthropic (_Model Context Protocol_), fornecendo ao seu LLM acesso a ferramentas determinísticas de engenharia:
+O **Nexus MCP Server** implementa o protocolo oficial da Anthropic (*Model Context Protocol*), fornecendo ao seu LLM acesso a ferramentas determinísticas de engenharia:
 
-| Ferramenta                  | Descrição                                                                                   |
-| :-------------------------- | :------------------------------------------------------------------------------------------ |
-| `nexus_status_sistema`      | Inspeciona CPU, RAM livre/usada, uptime e integridade do runtime Go.                        |
-| `nexus_validar_dod`         | Audita se uma entrega de código atende 100% aos critérios de aceite (_Definition of Done_). |
-| `nexus_auditar_comando`     | Analisa comandos de terminal antes de executá-los para evitar riscos de segurança.          |
-| `nexus_listar_adrs`         | Consulta o índice de Architecture Decision Records do projeto.                              |
-| `nexus_obter_estado_tarefa` | Lê as tarefas ativas, backlog e concluídas diretamente do Markdown.                         |
-| `nexus_auditar_impacto`     | Grafo de dependências para análise de raio de impacto de código.                            |
+| Ferramenta | Descrição |
+| :--- | :--- |
+| `nexus_status_sistema` | Inspeciona CPU, RAM livre/usada, uptime e integridade do runtime Go. |
+| `nexus_validar_dod` | Audita se uma entrega de código atende 100% aos critérios de aceite (*Definition of Done*). |
+| `nexus_auditar_comando`| Analisa comandos de terminal antes de executá-los para evitar riscos de segurança. |
+| `nexus_listar_adrs` | Consulta o índice de Architecture Decision Records do projeto. |
+| `nexus_obter_estado_tarefa` | Lê as tarefas ativas, backlog e concluídas diretamente do Markdown. |
+| `nexus_auditar_impacto` | Grafo de dependências para análise de raio de impacto de código. |
 
 ---
 
@@ -194,11 +194,11 @@ O framework vem com modelos prontos na pasta [`templates/`](templates/) para que
 
 ## 📚 7. Trilha de Tutoriais Oficiais (Onboarding)
 
-- 📖 **[Tutorial 01: Instalação e Setup Local do Zero](docs/tutoriais/01_instalacao_e_setup_local.md)**
-- 🔌 **[Tutorial 02: Conectando o Nexus MCP aos seus Agentes](docs/tutoriais/02_conectando_ao_seu_agente.md)**
-- 👥 **[Tutorial 03: Orquestrando o Squad de Agentes Especialistas](docs/tutoriais/03_usando_o_squad_de_especialistas.md)**
-- 📱 **[Tutorial 04: Acesso Remoto no Celular Fora de Casa (100% Gratuito)](docs/tutoriais/04_acesso_remoto_celular_gratuito.md)**
-- 👤 **[Tutorial 05: Personalizando Seu Perfil, Currículo e Preferências](docs/tutoriais/05_personalizacao_perfil_e_curriculo.md)**
+* 📖 **[Tutorial 01: Instalação e Setup Local do Zero](docs/tutoriais/01_instalacao_e_setup_local.md)**
+* 🔌 **[Tutorial 02: Conectando o Nexus MCP aos seus Agentes](docs/tutoriais/02_conectando_ao_seu_agente.md)**
+* 👥 **[Tutorial 03: Orquestrando o Squad de Agentes Especialistas](docs/tutoriais/03_usando_o_squad_de_especialistas.md)**
+* 📱 **[Tutorial 04: Acesso Remoto no Celular Fora de Casa (100% Gratuito)](docs/tutoriais/04_acesso_remoto_celular_gratuito.md)**
+* 👤 **[Tutorial 05: Personalizando Seu Perfil, Currículo e Preferências](docs/tutoriais/05_personalizacao_perfil_e_curriculo.md)**
 
 ---
 
@@ -208,7 +208,7 @@ Acesse o **Nexus Web Console** no smartphone quando estiver na rua ou viajando:
 
 1. **Instale o Tailscale no PC:** `curl -fsSL https://tailscale.com/install.sh | sh && sudo tailscale up`
 2. **Abra no Celular:** Baixe o app Tailscale, ative a conexão e acesse `http://100.x.y.z:8090`.
-3. **PWA Instalável:** Toque em _"Adicionar à tela de início"_ no navegador do celular — ele passa a abrir em tela cheia com ícone dedicado como um app nativo de smartphone!
+3. **PWA Instalável:** Toque em *"Adicionar à tela de início"* no navegador do celular — ele passa a abrir em tela cheia com ícone dedicado como um app nativo de smartphone!
 
 ---
 
@@ -243,30 +243,27 @@ Distribuído sob a licença **MIT**. Consulte [`LICENSE`](LICENSE) para mais det
 
 <img src="docs/assets/author_card.png" alt="Lucivaldo Junior - Terminal Profile" width="850" style="border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);" />
 
-<br/><br/>
-
-### Lucivaldo Junior
-**Engenheiro de Software Back-end & Arquiteto de Sistemas**  
-*Belém do Pará — Amazônia, Brasil*
+</div>
 
 <br/>
 
-<table>
-  <tr>
-    <td align="center" width="780">
-      <br/>
-      <em>❝ Da disciplina operacional de mais de 15 anos nas cozinhas profissionais para a engenharia de software de alta performance: calma sob pressão, resiliência técnica e foco intransigente em entregar arquiteturas limpas, concorrentes e escaláveis. ❞</em>
-      <br/><br/>
-    </td>
-  </tr>
-</table>
+<div align="left">
+
+**Lucivaldo Junior (Luci Junior)**  
+*Engenheiro de Software Back-end & Arquiteto de Sistemas | Belém do Pará — Amazônia, Brasil*
+
+> *"Da pressão contínua das cozinhas profissionais por mais de 15 anos para a engenharia de software de alta performance: trago a disciplina operacional da gastronomia, a calma sob pressão e o foco intransigente em entregar sistemas sólidos, leves e que resolvem problemas reais."*
+
+</div>
+
+---
+
+<div align="center">
 
 <br/>
 
-<a href="https://linkedin.com/in/lucivaldojr"><img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
-&nbsp;&nbsp;
-<a href="https://github.com/luci-jr"><img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub" /></a>
-&nbsp;&nbsp;
-<a href="https://portifolio.lucivaldo.cloud"><img src="https://img.shields.io/badge/Portfólio-D97706?style=for-the-badge&logo=safari&logoColor=white" alt="Portfólio" /></a>
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/lucivaldojr)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/luci-jr)
+[![Portfólio](https://img.shields.io/badge/Portfólio-D97706?style=for-the-badge&logo=safari&logoColor=white)](https://portifolio.lucivaldo.cloud)
 
 </div>
