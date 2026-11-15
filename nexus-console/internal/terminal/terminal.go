@@ -2,6 +2,7 @@ package terminal
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -214,14 +215,39 @@ func (h *Handler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	cmd.Dir = h.nexusDir
 
 	if isLocalMode {
-		// Modo Local: Preserva o ambiente nativo do usuário (home, zsh/bash, PATH, aliases)
-		env := os.Environ()
-		env = append(env,
-			"TERM=xterm-256color",
-			"COLORTERM=truecolor",
-			"NEXUS_DIR="+h.nexusDir,
-		)
-		cmd.Env = env
+		if target == "cloud" {
+			// Acesso direto à Nuvem AWS via SSH com a chave do host
+			keyPath := os.Getenv("NEXUS_AWS_KEY")
+			if keyPath == "" {
+				home, _ := os.UserHomeDir()
+				keyPath = filepath.Join(home, ".ssh", "key-nexus-project.pem")
+			}
+			awsHost := os.Getenv("NEXUS_AWS_HOST")
+			if awsHost == "" {
+				awsHost = "192.0.2.1"
+			}
+			awsUser := os.Getenv("NEXUS_AWS_USER")
+			if awsUser == "" {
+				awsUser = "ubuntu"
+			}
+
+			cmd = exec.Command("ssh",
+				"-i", keyPath,
+				"-o", "StrictHostKeyChecking=accept-new",
+				"-o", "ConnectTimeout=10",
+				"-t",
+				fmt.Sprintf("%s@%s", awsUser, awsHost),
+			)
+		} else {
+			// Modo Local: Preserva o ambiente nativo do usuário (home, zsh/bash, PATH, aliases)
+			env := os.Environ()
+			env = append(env,
+				"TERM=xterm-256color",
+				"COLORTERM=truecolor",
+				"NEXUS_DIR="+h.nexusDir,
+			)
+			cmd.Env = env
+		}
 	} else {
 		// Modo Nuvem (AWS Docker Swarm Container)
 		cmd.Env = append(os.Environ(),

@@ -67,23 +67,18 @@
 
       const isLocalDev = document.body.classList.contains('local-dev-mode');
 
-      // ☁️ Botão Nó Cloud (Nuvem AWS) - Oculto no Modo Local
+      // ☁️ Botão Nó Cloud (Nuvem AWS)
       if (btnCloud && dotCloud) {
-        if (isLocalDev) {
-          btnCloud.classList.add('hidden');
-          btnCloud.style.display = 'none';
+        btnCloud.style.display = '';
+        btnCloud.classList.remove('hidden');
+        if (currentTerminalTarget === 'cloud') {
+          btnCloud.className = CLASS_ON_NODE;
+          dotCloud.className = DOT_ON;
+          dotCloud.title = 'Shell Cloud Ligado e Ativo';
         } else {
-          btnCloud.style.display = '';
-          btnCloud.classList.remove('hidden');
-          if (currentTerminalTarget === 'cloud') {
-            btnCloud.className = CLASS_ON_NODE;
-            dotCloud.className = DOT_ON;
-            dotCloud.title = 'Shell Cloud Ligado e Ativo';
-          } else {
-            btnCloud.className = CLASS_OFF_NODE;
-            dotCloud.className = DOT_OFF;
-            dotCloud.title = 'Shell Cloud Desligado (Clique para Ligar)';
-          }
+          btnCloud.className = CLASS_OFF_NODE;
+          dotCloud.className = DOT_OFF;
+          dotCloud.title = 'Shell Cloud Desligado (Clique para Ligar)';
         }
       }
 
@@ -96,20 +91,15 @@
         } else {
           btnLocal.className = CLASS_OFF_NODE;
           dotLocal.className = DOT_OFF;
-          dotLocal.title = isLocalDev ? 'Terminal Local Desligado (Clique para Ligar)' : (isAgentPcOnline ? 'PC Local Online (Desligado · Clique para Ligar)' : 'PC Local Offline (agente não conectado)');
+          dotLocal.title = 'Terminal Local Desligado (Clique para Ligar)';
         }
       }
 
       // ☸️ Botão Swarm
       const btnSwarm = document.getElementById('btn-term-swarm');
       if (btnSwarm) {
-        if (isLocalDev) {
-          btnSwarm.classList.add('hidden');
-          btnSwarm.style.display = 'none';
-        } else {
-          btnSwarm.style.display = '';
-          btnSwarm.classList.remove('hidden');
-        }
+        btnSwarm.style.display = '';
+        btnSwarm.classList.remove('hidden');
       }
 
       // 🧠 Botão Agente Lucy
