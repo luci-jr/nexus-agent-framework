@@ -37,8 +37,7 @@
             try { localStorage.setItem('nexus_auth_token', data.token); } catch (_) {}
           }
           if (data.no_auth_mode) {
-            document.body.classList.add('local-dev-mode');
-            applyLocalDevFocus();
+            // Modo local: paridade total 1:1 com a interface da nuvem
           }
         } else {
           window.nexusIsAuthenticated = false;
@@ -172,61 +171,7 @@
     }
 
     function applyLocalDevFocus() {
-      // 1. Oculta abas que são ruído no ambiente local (WhatsApp e Infra Swarm)
-      const tabWa = document.getElementById('btn-tab-whatsapp');
-      if (tabWa) tabWa.classList.add('hidden', 'local-excluded');
-      const tabSvc = document.getElementById('btn-tab-services');
-      if (tabSvc) tabSvc.classList.add('hidden', 'local-excluded');
-      
-      // 2. Renomeia categoria 'Operações & Infra' para 'Squad & Ferramentas' (elimina menção a Infra no modo local)
-      const btnOps = document.getElementById('btn-cat-ops');
-      if (btnOps) {
-        btnOps.title = '10 Copilotos Especialistas do Squad e Ferramentas MCP';
-        const spanOps = btnOps.querySelector('span:first-child');
-        if (spanOps) spanOps.innerHTML = '👥 Squad &amp; Ferramentas';
-      }
-
-      // Atualiza contadores visuais das categorias
-      const badgeCore = document.querySelector('#btn-cat-core .nav-cat-badge');
-      if (badgeCore) badgeCore.textContent = '3';
-      const badgeOps = document.querySelector('#btn-cat-ops .nav-cat-badge');
-      if (badgeOps) badgeOps.textContent = '2';
-
-      // 3. Atualiza badge de observabilidade no menu
-      const hubBadge = document.getElementById('hub-status-badge');
-      if (hubBadge) {
-        hubBadge.innerHTML = `
-          <span class="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-          <span class="font-bold text-cyan-500 dark:text-cyan-400">DEV LOCAL</span>
-          <span class="text-slate-400 dark:text-slate-500">|</span>
-          <span class="text-slate-600 dark:text-slate-300">Modo Foco Ativo</span>
-        `;
-      }
-
-      // 4. Limpeza e calibração do Terminal para o ambiente Local (Ubuntu)
-      const btnCloud = document.getElementById('btn-term-node-cloud');
-      if (btnCloud) {
-        btnCloud.classList.add('hidden');
-        btnCloud.style.display = 'none';
-      }
-      const btnSwarm = document.getElementById('btn-term-swarm');
-      if (btnSwarm) {
-        btnSwarm.classList.add('hidden');
-        btnSwarm.style.display = 'none';
-      }
-
-      const termDesc = document.getElementById('term-session-desc');
-      if (termDesc) termDesc.textContent = 'Sessão interativa conectada ao terminal local da sua máquina (Ubuntu Desktop)';
-
-      updateTerminalDynamicTitle();
-
-      // 5. Oculta filtro de infraestrutura Swarm no Grafo Neural no modo local
-      const filterSvc = document.getElementById('gfilter-service');
-      if (filterSvc) filterSvc.classList.add('hidden');
-
-      // Garante que o target do terminal seja local nativo
-      currentTerminalTarget = 'local';
-      updateTerminalControlsUI();
+      // Paridade total 1:1 com a Nuvem: não oculta abas, filtros ou botões
     }
     window.applyLocalDevFocus = applyLocalDevFocus;
 

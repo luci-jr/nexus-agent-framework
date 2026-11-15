@@ -486,17 +486,11 @@ func GetSystemStatus(nexusDir string) SystemStatus {
 
 	ramUsed, ramTotal, ramPct, swapUsed, swapTotal := readProcMeminfo()
 
-	envMode := strings.ToLower(os.Getenv("NEXUS_ENV"))
-	isCloud := envMode == "production" || envMode == "cloud" || len(swarmMap) > 0
-
-	var services []ServiceStatus
-
-	if isCloud {
-		// Checagem concorrente de latência TCP dos serviços chave da Nuvem
-		latencies := make(map[string]string)
-		statuses := make(map[string]string)
-		var mu sync.Mutex
-		var wg sync.WaitGroup
+	// Checagem concorrente de latência TCP dos serviços chave
+	latencies := make(map[string]string)
+	statuses := make(map[string]string)
+	var mu sync.Mutex
+	var wg sync.WaitGroup
 
 		traefikHost := os.Getenv("TRAEFIK_TCP_TARGET")
 		if traefikHost == "" {
@@ -572,7 +566,7 @@ func GetSystemStatus(nexusDir string) SystemStatus {
 			pgLat = l
 		}
 
-		services = []ServiceStatus{
+		services := []ServiceStatus{
 			{
 				Name:        "Traefik v3",
 				Type:        "Reverse Proxy & SSL",
@@ -678,99 +672,6 @@ func GetSystemStatus(nexusDir string) SystemStatus {
 				CheckedAt:   nowStr,
 			},
 		}
-	} else {
-		// Modo Local / Estação de Trabalho: Focado no ambiente local e containers reais do host
-		services = []ServiceStatus{
-			{
-				Name:        "Nexus Web Console (Local)",
-				Type:        "Painel de Controle",
-				Status:      "Online",
-				Replicas:    "1/1 Processo Go",
-				Latency:     "<1ms",
-				Endpoint:    "http://localhost:8090",
-				Image:       "Binário Go Nativo (<15MB RAM)",
-				Network:     "Host Local (Loopback)",
-				Details:     "Go 1.22+ //go:embed • Dashboard & Governança",
-				Description: "Dashboard gráfico executivo para governança, visualização de tarefas Kanban, leitura de ADRs e lições aprendidas.",
-				CheckedAt:   nowStr,
-			},
-			{
-				Name:        "Nexus MCP Server (Local)",
-				Type:        "Servidor de Protocolo MCP",
-				Status:      "Online",
-				Replicas:    "1/1 Local",
-				Latency:     "<0.1ms",
-				Endpoint:    "stdio (Antigravity / Claude)",
-				Image:       "nexus-mcp:v3.1",
-				Network:     "IPC Local",
-				Details:     "18 ferramentas ativas de governança e telemetria",
-				Description: "Servidor MCP nativo em Go expondo ferramentas de auditoria de código, memória viva, estado de tarefas e telemetria.",
-				CheckedAt:   nowStr,
-			},
-		}
-
-		localContainers := queryLocalDockerContainers()
-		if len(localContainers) > 0 {
-			for _, c := range localContainers {
-				name := "Container"
-				if len(c.Names) > 0 {
-					name = strings.TrimPrefix(c.Names[0], "/")
-				}
-				portInfo := "docker:internal"
-				for _, p := range c.Ports {
-					if p.PublicPort > 0 {
-						portInfo = fmt.Sprintf("localhost:%d", p.PublicPort)
-						break
-					}
-				}
-				statusText := "Online"
-				if c.State != "" && c.State != "running" {
-					statusText = strings.ToUpper(c.State[:1]) + c.State[1:]
-				}
-
-				services = append(services, ServiceStatus{
-					Name:        name,
-					Type:        "Container Docker Local",
-					Status:      statusText,
-					Replicas:    "1/1 Container",
-					Latency:     "1ms",
-					Endpoint:    portInfo,
-					Image:       c.Image,
-					Network:     "Docker Bridge Local",
-					Details:     c.Status,
-					Description: fmt.Sprintf("Container Docker em execução no host local (ID: %.12s).", c.ID),
-					CheckedAt:   nowStr,
-				})
-			}
-		} else {
-			services = append(services, ServiceStatus{
-				Name:        "Estação Linux Ubuntu (Host)",
-				Type:        "Ambiente do Sistema",
-				Status:      "Online",
-				Replicas:    "Kernel Linux Nativo",
-				Latency:     "0ms",
-				Endpoint:    "localhost",
-				Image:       "Ubuntu Linux (Wayland)",
-				Network:     "Host Local",
-				Details:     fmt.Sprintf("RAM: %.1fGB / %.1fGB", ramUsed, ramTotal),
-				Description: "Estação de trabalho local para desenvolvimento de software de alta performance e isolamento de processos.",
-				CheckedAt:   nowStr,
-			})
-			services = append(services, ServiceStatus{
-				Name:        "Squad de Especialistas IA",
-				Type:        "Camada Cognitiva",
-				Status:      "Prontos",
-				Replicas:    "10 Copilotos Ativos",
-				Latency:     "Instantâneo",
-				Endpoint:    "Google Antigravity CLI (agy)",
-				Image:       "Lucy, Backend, Frontend, QA, etc.",
-				Network:     "Camada Cognitiva Local",
-				Details:     "Prompts em agentes/agents/ & Skills em skills/",
-				Description: "Squad de engenharia de software governado com Spec-Driven Development, Clean Architecture e TDD.",
-				CheckedAt:   nowStr,
-			})
-		}
-	}
 
 	tools := []MCPTool{
 		{Name: "nexus_status_sistema", Category: "Telemetria", Description: "Retorna status de CPU, RAM, GPU RTX 4050, discos e Docker."},

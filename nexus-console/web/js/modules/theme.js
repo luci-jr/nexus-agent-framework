@@ -173,28 +173,7 @@
     }
 
     function applyLocalDevFocus() {
-      // 1. Oculta abas que são ruído no ambiente local
-      const tabWa = document.getElementById('btn-tab-whatsapp');
-      if (tabWa) tabWa.classList.add('hidden', 'local-excluded');
-      const tabSvc = document.getElementById('btn-tab-services');
-      if (tabSvc) tabSvc.classList.add('hidden', 'local-excluded');
-      
-      // 2. Atualiza contadores visuais das categorias
-      const badgeCore = document.querySelector('#btn-cat-core .nav-cat-badge');
-      if (badgeCore) badgeCore.textContent = '3';
-      const badgeOps = document.querySelector('#btn-cat-ops .nav-cat-badge');
-      if (badgeOps) badgeOps.textContent = '2';
-
-      // 3. Atualiza badge de observabilidade no menu
-      const hubBadge = document.getElementById('hub-status-badge');
-      if (hubBadge) {
-        hubBadge.innerHTML = `
-          <span class="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-          <span class="font-bold text-cyan-500 dark:text-cyan-400">DEV LOCAL</span>
-          <span class="text-slate-400 dark:text-slate-500">|</span>
-          <span class="text-slate-600 dark:text-slate-300">Modo Foco Ativo</span>
-        `;
-      }
+      // Paridade total 1:1 com a Nuvem: não oculta abas, filtros ou botões
     }
     window.applyLocalDevFocus = applyLocalDevFocus;
 

@@ -183,11 +183,6 @@
     }
 
     function toggleTerminalNode(target) {
-      const isLocalDev = document.body.classList.contains('local-dev-mode');
-      if (isLocalDev && target === 'cloud') {
-        target = 'local';
-      }
-
       if (currentTerminalTarget === target) {
         // Desliga o nó ativo -> entra em Standby
         currentTerminalTarget = 'none';
@@ -196,7 +191,7 @@
         disconnectTerminalSocket();
         updateTerminalControlsUI();
         renderTerminalStandby();
-        showToast(isLocalDev ? 'Terminal Local desligado (Standby).' : `Terminal ${target === 'cloud' ? 'Nuvem AWS' : 'Local'} desligado.`);
+        showToast(`Terminal ${target === 'cloud' ? 'Nuvem AWS' : 'Local'} desligado.`);
         return;
       }
 
@@ -208,7 +203,7 @@
       if (termInstance) termInstance.clear();
       termReconnectAttempts = 0;
       connectTerminalSocket();
-      showToast(isLocalDev ? 'Terminal Local ativado! 🟢' : `Terminal ${target === 'cloud' ? 'Nuvem AWS' : 'do PC Local'} ativado! 🟢`);
+      showToast(`Terminal ${target === 'cloud' ? 'Nuvem AWS' : 'do PC Local'} ativado! 🟢`);
     }
     window.toggleTerminalNode = toggleTerminalNode;
     window.switchTerminalTarget = toggleTerminalNode; // Compatibilidade retroativa
