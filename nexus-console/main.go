@@ -19,7 +19,7 @@ import (
 	"github.com/luci-jr/nexus-console/internal/terminal"
 )
 
-var ConsoleVersion = "2.2.32"
+var ConsoleVersion = "2.2.33"
 
 //go:embed web/*
 var webFS embed.FS
