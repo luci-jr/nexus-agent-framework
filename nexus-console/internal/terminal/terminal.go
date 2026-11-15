@@ -237,6 +237,11 @@ func (h *Handler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 				"-o", "ConnectTimeout=10",
 				"-t",
 				fmt.Sprintf("%s@%s", awsUser, awsHost),
+				"env TERM=xterm-256color COLORTERM=truecolor bash -l",
+			)
+			cmd.Env = append(os.Environ(),
+				"TERM=xterm-256color",
+				"COLORTERM=truecolor",
 			)
 		} else {
 			// Modo Local: Preserva o ambiente nativo do usuário (home, zsh/bash, PATH, aliases)
