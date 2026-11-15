@@ -31,7 +31,7 @@ Ou edite manualmente o arquivo de configuração `~/.claude/config.json`:
 {
   "mcpServers": {
     "nexus": {
-      "command": "/caminho/absoluto/nexus-agent-framework/bin/nexus-mcp",
+      "command": "/caminho/absoluto/nexus-ecosystem-open/bin/nexus-mcp",
       "args": []
     }
   }
@@ -67,7 +67,7 @@ Basta abrir o projeto no Antigravity que o servidor será inicializado automatic
 3. Preencha os campos:
    * **Name:** `nexus`
    * **Type:** `command`
-   * **Command:** `/caminho/absoluto/nexus-agent-framework/bin/nexus-mcp`
+   * **Command:** `/caminho/absoluto/nexus-ecosystem-open/bin/nexus-mcp`
 4. Clique em **Save**. O indicador ficará verde indicando que as ferramentas foram carregadas.
 
 ---
@@ -84,7 +84,7 @@ Adicione a seção:
 {
   "mcpServers": {
     "nexus": {
-      "command": "/caminho/absoluto/nexus-agent-framework/bin/nexus-mcp",
+      "command": "/caminho/absoluto/nexus-ecosystem-open/bin/nexus-mcp",
       "args": []
     }
   }

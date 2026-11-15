@@ -1,6 +1,6 @@
 # 👤 Tutorial 05: Personalizando Seu Perfil, Currículo e Preferências
 
-O **Nexus Agent Framework** foi desenhado para se moldar perfeitamente a **você**.
+O **Nexus Ecosystem (Open Source Edition)** foi desenhado para se moldar perfeitamente a **você**.
 
 Quando você preenche seu perfil e currículo, os copilotos (especialmente a **Lucy** e o **Frellas**) passam a te tratar pelo seu nome, avaliar vagas de acordo com sua pretensão salarial real e escrever código respeitando exatamente a sua senioridade.
 
@@ -61,5 +61,4 @@ Escolha como prefere ser tratado:
 ---
 
 ## 🎯 Conclusão
-Com esses 3 arquivos preenchidos, o **Nexus Agent Framework** deixa de ser um assistente genérico e se torna o **seu copiloto de carreira e engenharia personalizado**.
-
+Com esses 3 arquivos preenchidos, o **Nexus Ecosystem (Open Source Edition)** deixa de ser um assistente genérico e se torna o **seu copiloto de carreira e engenharia personalizado**.

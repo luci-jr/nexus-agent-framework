@@ -1,6 +1,6 @@
 # 🚀 Tutorial 01: Instalação e Setup Local do Zero
 
-Bem-vindo ao **Nexus Agent Framework**! Este guia vai te ensinar a configurar todo o ecossistema na sua máquina local do zero em menos de **3 minutos**.
+Bem-vindo ao **Nexus Ecosystem (Open Source Edition)**! Este guia vai te ensinar a configurar todo o ecossistema na sua máquina local do zero em menos de **3 minutos**.
 
 ---
 
@@ -29,8 +29,8 @@ make --version
 Abra o terminal na pasta onde você guarda seus projetos e clone o repositório:
 
 ```bash
-git clone https://github.com/luci-jr/nexus-agent-framework.git
-cd nexus-agent-framework
+git clone https://github.com/luci-jr/nexus-ecosystem-open.git
+cd nexus-ecosystem-open
 ```
 
 ---
@@ -75,7 +75,7 @@ Ou diretamente pelo binário:
 Você verá a inicialização imediata:
 ```text
 🌌 [NEXUS CONSOLE] Inicializando servidor web em Go...
-📂 [NEXUS DIR] Diretório de governança: /seu/caminho/nexus-agent-framework
+📂 [NEXUS DIR] Diretório de governança: /seu/caminho/nexus-ecosystem-open
 🚀 [NEXUS CONSOLE] Ouvindo em http://0.0.0.0:8090
 ```
 

@@ -1,6 +1,6 @@
 # 👥 Tutorial 03: Orquestrando o Squad de Agentes Especialistas
 
-O **Nexus Agent Framework** não é apenas um chatbot genérico: ele opera com um **Squad de 10 Copilotos Especialistas**, cada um treinado com diretrizes rigorosas de engenharia de software sênior.
+O **Nexus Ecosystem (Open Source Edition)** não é apenas um chatbot genérico: ele opera com um **Squad de 10 Copilotos Especialistas**, cada um treinado com diretrizes rigorosas de engenharia de software sênior.
 
 Neste guia, você aprenderá como acionar cada especialista e como orquestrar o fluxo de desenvolvimento orientado a especificações (*Spec-Driven Development*).
 

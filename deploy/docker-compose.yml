@@ -1,0 +1,69 @@
+services:
+  # ==============================================================================
+  # 🔒 Traefik v3 — Reverse Proxy com Terminação TLS Automática (Let's Encrypt)
+  # ==============================================================================
+  traefik:
+    image: traefik:v3.1
+    container_name: nexus-traefik
+    restart: unless-stopped
+    command:
+      - "--api.dashboard=false"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      # Redirecionamento forçado de HTTP para HTTPS:
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      # Certificados SSL Automáticos:
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "traefik-certificates:/letsencrypt"
+    networks:
+      - nexus-network
+
+  # ==============================================================================
+  # 🖥️ Nexus Web Console — Dashboard Executivo & Governança (Go Nativo)
+  # ==============================================================================
+  nexus-console:
+    build:
+      context: ../nexus-console
+      dockerfile: Dockerfile
+    container_name: nexus-console
+    restart: unless-stopped
+    environment:
+      - PORT=8090
+      - NEXUS_ENV=production
+      - CONSOLE_USER=${CONSOLE_USER:-admin}
+      - CONSOLE_PASSWORD=${CONSOLE_PASSWORD:-nexus2026}
+      - NEXUS_DIR=/nexus
+    volumes:
+      - "../:/nexus:ro"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nexus-console.rule=Host(`${NEXUS_DOMAIN}`)"
+      - "traefik.http.routers.nexus-console.entrypoints=websecure"
+      - "traefik.http.routers.nexus-console.tls.certresolver=letsencrypt"
+      - "traefik.http.services.nexus-console.loadbalancer.server.port=8090"
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+    networks:
+      - nexus-network
+    depends_on:
+      - traefik
+
+volumes:
+  traefik-certificates:
+
+networks:
+  nexus-network:
+    driver: bridge
+

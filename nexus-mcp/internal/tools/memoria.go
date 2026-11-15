@@ -44,8 +44,8 @@ func RegistrarToolsMemoria(s *server.MCPServer, paths *config.Paths) {
 		// Roteamento Modular de Arquivos (ADR 0003)
 		if paths != nil && paths.MemoriaModularDir != "" {
 			mapaModulos := map[string]string{
-				"operacional":  paths.MemoriaOperacionalPath,
-				"estado":       paths.MemoriaOperacionalPath,
+				"operacional":  filepath.Join(paths.MemoriaModularDir, "02_regras_e_politicas.md"),
+				"estado":       filepath.Join(paths.MemoriaModularDir, "02_regras_e_politicas.md"),
 				"arquitetura":  filepath.Join(paths.MemoriaModularDir, "01_stack_e_arquitetura.md"),
 				"stack":        filepath.Join(paths.MemoriaModularDir, "01_stack_e_arquitetura.md"),
 				"padroes":      filepath.Join(paths.MemoriaModularDir, "01_stack_e_arquitetura.md"),
