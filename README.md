@@ -1,6 +1,8 @@
 <div align="center">
 
-# ⚛️ Nexus Ecosystem (Open Source Edition)
+<img src="docs/assets/nexus_logo.png" alt="Nexus Logo" width="100" />
+
+# Nexus Ecosystem (Open Source Edition)
 
 ### *A Versão Aberta da Plataforma de Engenharia, MCP Server e Squad de Especialistas em Go Nativo*
 
