@@ -395,6 +395,41 @@ func checkTCPLatency(addr string, timeout time.Duration) (bool, string) {
 	return true, fmt.Sprintf("%dms", dur.Milliseconds())
 }
 
+type LocalDockerContainer struct {
+	ID     string   `json:"Id"`
+	Names  []string `json:"Names"`
+	Image  string   `json:"Image"`
+	State  string   `json:"State"`
+	Status string   `json:"Status"`
+	Ports  []struct {
+		PrivatePort int    `json:"PrivatePort"`
+		PublicPort  int    `json:"PublicPort"`
+		Type        string `json:"Type"`
+	} `json:"Ports"`
+}
+
+func queryLocalDockerContainers() []LocalDockerContainer {
+	var result []LocalDockerContainer
+	if _, err := os.Stat("/var/run/docker.sock"); err != nil {
+		return result
+	}
+
+	tr := &http.Transport{
+		DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+			return net.Dial("unix", "/var/run/docker.sock")
+		},
+	}
+	client := &http.Client{Transport: tr, Timeout: 350 * time.Millisecond}
+	resp, err := client.Get("http://localhost/containers/json")
+	if err != nil {
+		return result
+	}
+	defer resp.Body.Close()
+
+	_ = json.NewDecoder(resp.Body).Decode(&result)
+	return result
+}
+
 
 func readProcMeminfo() (ramUsedGB, ramTotalGB float64, ramPct int, swapUsedGB, swapTotalGB float64) {
 	data, err := os.ReadFile("/proc/meminfo")
@@ -449,191 +484,292 @@ func GetSystemStatus(nexusDir string) SystemStatus {
 	// Consulta em tempo real aos nós Swarm via Unix Socket
 	swarmMap := queryDockerSwarmServices()
 
-	// Checagem concorrente de latência TCP dos serviços chave
-	latencies := make(map[string]string)
-	statuses := make(map[string]string)
-	var mu sync.Mutex
-	var wg sync.WaitGroup
+	ramUsed, ramTotal, ramPct, swapUsed, swapTotal := readProcMeminfo()
 
-	traefikHost := os.Getenv("TRAEFIK_TCP_TARGET")
-	if traefikHost == "" {
-		traefikHost = "192.0.2.1:80"
-	}
-	redisHost := os.Getenv("REDIS_TCP_TARGET")
-	if redisHost == "" {
-		redisHost = "192.0.2.1:6379"
-	}
-	pgHost := os.Getenv("POSTGRES_TCP_TARGET")
-	if pgHost == "" {
-		pgHost = "db.example.internal:5432"
-	}
+	envMode := strings.ToLower(os.Getenv("NEXUS_ENV"))
+	isCloud := envMode == "production" || envMode == "cloud" || len(swarmMap) > 0
 
-	tcpTargets := map[string]string{
-		"postgres": pgHost,
-		"traefik":  traefikHost,
-		"redis":    redisHost,
-	}
+	var services []ServiceStatus
 
-	for key, addr := range tcpTargets {
-		wg.Add(1)
-		go func(k, a string) {
-			defer wg.Done()
-			ok, lat := checkTCPLatency(a, 400*time.Millisecond)
-			mu.Lock()
-			latencies[k] = lat
-			if ok {
-				statuses[k] = "Online"
-			} else {
-				statuses[k] = "Online" // Fallback gracioso
-			}
-			mu.Unlock()
-		}(key, addr)
-	}
-	wg.Wait()
+	if isCloud {
+		// Checagem concorrente de latência TCP dos serviços chave da Nuvem
+		latencies := make(map[string]string)
+		statuses := make(map[string]string)
+		var mu sync.Mutex
+		var wg sync.WaitGroup
 
-	getSwarmInfo := func(servicePattern string, defaultReplicas string, defaultImage string, tcpKey string) (string, string, string, string) {
-		status := "Online"
-		replicas := defaultReplicas
-		img := defaultImage
-		lat := "2ms"
-
-		if l, ok := latencies[tcpKey]; ok && l != "-" {
-			lat = l
+		traefikHost := os.Getenv("TRAEFIK_TCP_TARGET")
+		if traefikHost == "" {
+			traefikHost = "192.0.2.1:80"
+		}
+		redisHost := os.Getenv("REDIS_TCP_TARGET")
+		if redisHost == "" {
+			redisHost = "192.0.2.1:6379"
+		}
+		pgHost := os.Getenv("POSTGRES_TCP_TARGET")
+		if pgHost == "" {
+			pgHost = "db.example.internal:5432"
 		}
 
-		for name, s := range swarmMap {
-			if strings.Contains(name, servicePattern) {
-				replicas = fmt.Sprintf("%d/%d Ativo", s.Spec.Mode.Replicated.Replicas, s.Spec.Mode.Replicated.Replicas)
-				if s.Spec.TaskTemplate.ContainerSpec.Image != "" {
-					parts := strings.Split(s.Spec.TaskTemplate.ContainerSpec.Image, "@")
-					img = parts[0]
+		tcpTargets := map[string]string{
+			"postgres": pgHost,
+			"traefik":  traefikHost,
+			"redis":    redisHost,
+		}
+
+		for key, addr := range tcpTargets {
+			wg.Add(1)
+			go func(k, a string) {
+				defer wg.Done()
+				ok, lat := checkTCPLatency(a, 400*time.Millisecond)
+				mu.Lock()
+				latencies[k] = lat
+				if ok {
+					statuses[k] = "Online"
+				} else {
+					statuses[k] = "Online" // Fallback gracioso
 				}
-				status = "Online"
-				break
+				mu.Unlock()
+			}(key, addr)
+		}
+		wg.Wait()
+
+		getSwarmInfo := func(servicePattern string, defaultReplicas string, defaultImage string, tcpKey string) (string, string, string, string) {
+			status := "Online"
+			replicas := defaultReplicas
+			img := defaultImage
+			lat := "2ms"
+
+			if l, ok := latencies[tcpKey]; ok && l != "-" {
+				lat = l
 			}
+
+			for name, s := range swarmMap {
+				if strings.Contains(name, servicePattern) {
+					replicas = fmt.Sprintf("%d/%d Ativo", s.Spec.Mode.Replicated.Replicas, s.Spec.Mode.Replicated.Replicas)
+					if s.Spec.TaskTemplate.ContainerSpec.Image != "" {
+						parts := strings.Split(s.Spec.TaskTemplate.ContainerSpec.Image, "@")
+						img = parts[0]
+					}
+					status = "Online"
+					break
+				}
+			}
+
+			return status, replicas, img, lat
 		}
 
-		return status, replicas, img, lat
-	}
+		trStatus, trReplicas, trImg, trLat := getSwarmInfo("traefik", "1/1 Réplicas Ativas", "traefik:v3.7.13", "traefik")
+		evoStatus, evoReplicas, evoImg, evoLat := getSwarmInfo("evolution", "1/1 Réplicas Ativas", "evoapicloud/evolution-go:0.7.2", "traefik")
+		n8nStatus, n8nReplicas, n8nImg, n8nLat := getSwarmInfo("n8n", "3/3 Workers Ativos", "n8nio/n8n:2.45.3", "traefik")
+		redStatus, redReplicas, redImg, redLat := getSwarmInfo("redis", "1/1 Réplicas Ativas", "redis:7-alpine", "redis")
+		mcpStatus, mcpReplicas, mcpImg, mcpLat := getSwarmInfo("nexus-mcp", "1/1 Réplicas Ativas", "nexus-mcp:3.0.0", "traefik")
+		conStatus, conReplicas, conImg, conLat := getSwarmInfo("nexus-console", "1/1 Réplicas Ativas", "nexus-console:1.1.0", "traefik")
+		portStatus, portReplicas, portImg, portLat := getSwarmInfo("portainer", "1/1 Réplicas Ativas", "portainer/portainer-ce:2.45.2", "traefik")
 
-	trStatus, trReplicas, trImg, trLat := getSwarmInfo("traefik", "1/1 Réplicas Ativas", "traefik:v3.7.13", "traefik")
-	evoStatus, evoReplicas, evoImg, evoLat := getSwarmInfo("evolution", "1/1 Réplicas Ativas", "evoapicloud/evolution-go:0.7.2", "traefik")
-	n8nStatus, n8nReplicas, n8nImg, n8nLat := getSwarmInfo("n8n", "3/3 Workers Ativos", "n8nio/n8n:2.45.3", "traefik")
-	redStatus, redReplicas, redImg, redLat := getSwarmInfo("redis", "1/1 Réplicas Ativas", "redis:7-alpine", "redis")
-	mcpStatus, mcpReplicas, mcpImg, mcpLat := getSwarmInfo("nexus-mcp", "1/1 Réplicas Ativas", "nexus-mcp:3.0.0", "traefik")
-	conStatus, conReplicas, conImg, conLat := getSwarmInfo("nexus-console", "1/1 Réplicas Ativas", "nexus-console:1.1.0", "traefik")
-	portStatus, portReplicas, portImg, portLat := getSwarmInfo("portainer", "1/1 Réplicas Ativas", "portainer/portainer-ce:2.45.2", "traefik")
+		pgLat := "14ms"
+		if l, ok := latencies["postgres"]; ok && l != "-" {
+			pgLat = l
+		}
 
-	pgLat := "14ms"
-	if l, ok := latencies["postgres"]; ok && l != "-" {
-		pgLat = l
-	}
+		services = []ServiceStatus{
+			{
+				Name:        "Traefik v3",
+				Type:        "Reverse Proxy & SSL",
+				Status:      trStatus,
+				Replicas:    trReplicas,
+				Latency:     trLat,
+				Endpoint:    "https://traefik.lucivaldo.cloud",
+				Image:       trImg,
+				Network:     "rede-nexus",
+				Details:     "SSL Let's Encrypt (*.lucivaldo.cloud) • Terminação TLS",
+				Description: "Roteador e proxy reverso central com terminação TLS automática Let's Encrypt para todos os subdomínios.",
+				CheckedAt:   nowStr,
+			},
+			{
+				Name:        "Evolution Go",
+				Type:        "Gateway WhatsApp",
+				Status:      evoStatus,
+				Replicas:    evoReplicas,
+				Latency:     evoLat,
+				Endpoint:    "https://evolution.lucivaldo.cloud",
+				Image:       evoImg,
+				Network:     "rede-nexus",
+				Details:     "Go nativo + Postgres RDS + Redis Cache",
+				Description: "Gateway oficial WhatsApp em Go. Webhook de eventos isolado internamente na rede overlay para n8n_webhook:5678.",
+				CheckedAt:   nowStr,
+			},
+			{
+				Name:        "n8n Cluster",
+				Type:        "Automação & IA",
+				Status:      n8nStatus,
+				Replicas:    n8nReplicas,
+				Latency:     n8nLat,
+				Endpoint:    "https://n8n.lucivaldo.cloud",
+				Image:       n8nImg,
+				Network:     "rede-nexus",
+				Details:     "Docker Swarm + Postgres RDS + Redis Queue",
+				Description: "Orquestrador de fluxos, rotina 5-em-1 de vagas, triggers de WhatsApp e execução de agentes inteligentes.",
+				CheckedAt:   nowStr,
+			},
+			{
+				Name:        "PostgreSQL 16 RDS",
+				Type:        "Banco de Dados Central",
+				Status:      "Online",
+				Replicas:    "AWS RDS Multi-AZ",
+				Latency:     pgLat,
+				Endpoint:    "db.example.internal:5432",
+				Image:       "AWS Managed PostgreSQL 16.3",
+				Network:     "VPC AWS Privada",
+				Details:     "Bancos: evogo_auth, evogo_users, n8ndb, evolution",
+				Description: "Banco de dados relacional principal da infraestrutura com backups automatizados e disaster recovery 3-2-1.",
+				CheckedAt:   nowStr,
+			},
+			{
+				Name:        "Redis 7 Alpine",
+				Type:        "Cache & Filas Bull",
+				Status:      redStatus,
+				Replicas:    redReplicas,
+				Latency:     redLat,
+				Endpoint:    "redis:6379",
+				Image:       redImg,
+				Network:     "rede-nexus",
+				Details:     "Sessões WhatsApp & Filas Assíncronas",
+				Description: "Armazenamento em memória de ultra-baixa latência para sessões da Evolution Go e fila de execução assíncrona do n8n.",
+				CheckedAt:   nowStr,
+			},
+			{
+				Name:        "Nexus MCP Server",
+				Type:        "Servidor de Ferramentas",
+				Status:      mcpStatus,
+				Replicas:    mcpReplicas,
+				Latency:     mcpLat,
+				Endpoint:    "https://mcp.lucivaldo.cloud",
+				Image:       mcpImg,
+				Network:     "rede-nexus",
+				Details:     "19 ferramentas ativas de governança e telemetria",
+				Description: "Servidor MCP de alto desempenho em Go expondo ferramentas de auditoria, memória, ADRs, tarefas e telemetria.",
+				CheckedAt:   nowStr,
+			},
+			{
+				Name:        "Nexus Web Console",
+				Type:        "Painel de Controle",
+				Status:      conStatus,
+				Replicas:    conReplicas,
+				Latency:     conLat,
+				Endpoint:    "https://nexus-console.lucivaldo.cloud",
+				Image:       conImg,
+				Network:     "rede-nexus",
+				Details:     "Go 1.22+ //go:embed (<15MB RAM)",
+				Description: "Dashboard gráfico para governança, visualização de tarefas Kanban, leitura de ADRs e monitoramento móvel do ecossistema.",
+				CheckedAt:   nowStr,
+			},
+			{
+				Name:        "Portainer CE",
+				Type:        "Gestão de Containers",
+				Status:      portStatus,
+				Replicas:    portReplicas,
+				Latency:     portLat,
+				Endpoint:    "https://portainer.lucivaldo.cloud",
+				Image:       portImg,
+				Network:     "rede-nexus",
+				Details:     "Gestão Docker Swarm AWS",
+				Description: "Painel web de visualização de nós Swarm, volumes persistentes, logs de containers e monitoramento de stacks.",
+				CheckedAt:   nowStr,
+			},
+		}
+	} else {
+		// Modo Local / Estação de Trabalho: Focado no ambiente local e containers reais do host
+		services = []ServiceStatus{
+			{
+				Name:        "Nexus Web Console (Local)",
+				Type:        "Painel de Controle",
+				Status:      "Online",
+				Replicas:    "1/1 Processo Go",
+				Latency:     "<1ms",
+				Endpoint:    "http://localhost:8090",
+				Image:       "Binário Go Nativo (<15MB RAM)",
+				Network:     "Host Local (Loopback)",
+				Details:     "Go 1.22+ //go:embed • Dashboard & Governança",
+				Description: "Dashboard gráfico executivo para governança, visualização de tarefas Kanban, leitura de ADRs e lições aprendidas.",
+				CheckedAt:   nowStr,
+			},
+			{
+				Name:        "Nexus MCP Server (Local)",
+				Type:        "Servidor de Protocolo MCP",
+				Status:      "Online",
+				Replicas:    "1/1 Local",
+				Latency:     "<0.1ms",
+				Endpoint:    "stdio (Antigravity / Claude)",
+				Image:       "nexus-mcp:v3.1",
+				Network:     "IPC Local",
+				Details:     "18 ferramentas ativas de governança e telemetria",
+				Description: "Servidor MCP nativo em Go expondo ferramentas de auditoria de código, memória viva, estado de tarefas e telemetria.",
+				CheckedAt:   nowStr,
+			},
+		}
 
-	services := []ServiceStatus{
-		{
-			Name:        "Traefik v3",
-			Type:        "Reverse Proxy & SSL",
-			Status:      trStatus,
-			Replicas:    trReplicas,
-			Latency:     trLat,
-			Endpoint:    "https://traefik.lucivaldo.cloud",
-			Image:       trImg,
-			Network:     "rede-nexus",
-			Details:     "SSL Let's Encrypt (*.lucivaldo.cloud) • Terminação TLS",
-			Description: "Roteador e proxy reverso central com terminação TLS automática Let's Encrypt para todos os subdomínios.",
-			CheckedAt:   nowStr,
-		},
-		{
-			Name:        "Evolution Go",
-			Type:        "Gateway WhatsApp",
-			Status:      evoStatus,
-			Replicas:    evoReplicas,
-			Latency:     evoLat,
-			Endpoint:    "https://evolution.lucivaldo.cloud",
-			Image:       evoImg,
-			Network:     "rede-nexus",
-			Details:     "Go nativo + Postgres RDS + Redis Cache",
-			Description: "Gateway oficial WhatsApp em Go. Webhook de eventos isolado internamente na rede overlay para n8n_webhook:5678.",
-			CheckedAt:   nowStr,
-		},
-		{
-			Name:        "n8n Cluster",
-			Type:        "Automação & IA",
-			Status:      n8nStatus,
-			Replicas:    n8nReplicas,
-			Latency:     n8nLat,
-			Endpoint:    "https://n8n.lucivaldo.cloud",
-			Image:       n8nImg,
-			Network:     "rede-nexus",
-			Details:     "Docker Swarm + Postgres RDS + Redis Queue",
-			Description: "Orquestrador de fluxos, rotina 5-em-1 de vagas, triggers de WhatsApp e execução de agentes inteligentes.",
-			CheckedAt:   nowStr,
-		},
-		{
-			Name:        "PostgreSQL 16 RDS",
-			Type:        "Banco de Dados Central",
-			Status:      "Online",
-			Replicas:    "AWS RDS Multi-AZ",
-			Latency:     pgLat,
-			Endpoint:    "db.example.internal:5432",
-			Image:       "AWS Managed PostgreSQL 16.3",
-			Network:     "VPC AWS Privada",
-			Details:     "Bancos: evogo_auth, evogo_users, n8ndb, evolution",
-			Description: "Banco de dados relacional principal da infraestrutura com backups automatizados e disaster recovery 3-2-1.",
-			CheckedAt:   nowStr,
-		},
-		{
-			Name:        "Redis 7 Alpine",
-			Type:        "Cache & Filas Bull",
-			Status:      redStatus,
-			Replicas:    redReplicas,
-			Latency:     redLat,
-			Endpoint:    "redis:6379",
-			Image:       redImg,
-			Network:     "rede-nexus",
-			Details:     "Sessões WhatsApp & Filas Assíncronas",
-			Description: "Armazenamento em memória de ultra-baixa latência para sessões da Evolution Go e fila de execução assíncrona do n8n.",
-			CheckedAt:   nowStr,
-		},
-		{
-			Name:        "Nexus MCP Server",
-			Type:        "Servidor de Ferramentas",
-			Status:      mcpStatus,
-			Replicas:    mcpReplicas,
-			Latency:     mcpLat,
-			Endpoint:    "https://mcp.lucivaldo.cloud",
-			Image:       mcpImg,
-			Network:     "rede-nexus",
-			Details:     "19 ferramentas ativas de governança e telemetria",
-			Description: "Servidor MCP de alto desempenho em Go expondo ferramentas de auditoria, memória, ADRs, tarefas e telemetria.",
-			CheckedAt:   nowStr,
-		},
-		{
-			Name:        "Nexus Web Console",
-			Type:        "Painel de Controle",
-			Status:      conStatus,
-			Replicas:    conReplicas,
-			Latency:     conLat,
-			Endpoint:    "https://nexus-console.lucivaldo.cloud",
-			Image:       conImg,
-			Network:     "rede-nexus",
-			Details:     "Go 1.22+ //go:embed (<15MB RAM)",
-			Description: "Dashboard gráfico para governança, visualização de tarefas Kanban, leitura de ADRs e monitoramento móvel do ecossistema.",
-			CheckedAt:   nowStr,
-		},
-		{
-			Name:        "Portainer CE",
-			Type:        "Gestão de Containers",
-			Status:      portStatus,
-			Replicas:    portReplicas,
-			Latency:     portLat,
-			Endpoint:    "https://portainer.lucivaldo.cloud",
-			Image:       portImg,
-			Network:     "rede-nexus",
-			Details:     "Gestão Docker Swarm AWS",
-			Description: "Painel web de visualização de nós Swarm, volumes persistentes, logs de containers e monitoramento de stacks.",
-			CheckedAt:   nowStr,
-		},
+		localContainers := queryLocalDockerContainers()
+		if len(localContainers) > 0 {
+			for _, c := range localContainers {
+				name := "Container"
+				if len(c.Names) > 0 {
+					name = strings.TrimPrefix(c.Names[0], "/")
+				}
+				portInfo := "docker:internal"
+				for _, p := range c.Ports {
+					if p.PublicPort > 0 {
+						portInfo = fmt.Sprintf("localhost:%d", p.PublicPort)
+						break
+					}
+				}
+				statusText := "Online"
+				if c.State != "" && c.State != "running" {
+					statusText = strings.ToUpper(c.State[:1]) + c.State[1:]
+				}
+
+				services = append(services, ServiceStatus{
+					Name:        name,
+					Type:        "Container Docker Local",
+					Status:      statusText,
+					Replicas:    "1/1 Container",
+					Latency:     "1ms",
+					Endpoint:    portInfo,
+					Image:       c.Image,
+					Network:     "Docker Bridge Local",
+					Details:     c.Status,
+					Description: fmt.Sprintf("Container Docker em execução no host local (ID: %.12s).", c.ID),
+					CheckedAt:   nowStr,
+				})
+			}
+		} else {
+			services = append(services, ServiceStatus{
+				Name:        "Estação Linux Ubuntu (Host)",
+				Type:        "Ambiente do Sistema",
+				Status:      "Online",
+				Replicas:    "Kernel Linux Nativo",
+				Latency:     "0ms",
+				Endpoint:    "localhost",
+				Image:       "Ubuntu Linux (Wayland)",
+				Network:     "Host Local",
+				Details:     fmt.Sprintf("RAM: %.1fGB / %.1fGB", ramUsed, ramTotal),
+				Description: "Estação de trabalho local para desenvolvimento de software de alta performance e isolamento de processos.",
+				CheckedAt:   nowStr,
+			})
+			services = append(services, ServiceStatus{
+				Name:        "Squad de Especialistas IA",
+				Type:        "Camada Cognitiva",
+				Status:      "Prontos",
+				Replicas:    "10 Copilotos Ativos",
+				Latency:     "Instantâneo",
+				Endpoint:    "Google Antigravity CLI (agy)",
+				Image:       "Lucy, Backend, Frontend, QA, etc.",
+				Network:     "Camada Cognitiva Local",
+				Details:     "Prompts em agentes/agents/ & Skills em skills/",
+				Description: "Squad de engenharia de software governado com Spec-Driven Development, Clean Architecture e TDD.",
+				CheckedAt:   nowStr,
+			})
+		}
 	}
 
 	tools := []MCPTool{
@@ -657,8 +793,6 @@ func GetSystemStatus(nexusDir string) SystemStatus {
 		{Name: "nexus_salvar_relatorio", Category: "Governança", Description: "Grava relatórios executivos em relatorios/<copiloto>/."},
 		{Name: "nexus_registrar_aprendizado", Category: "Memória", Description: "Grava novo aprendizado técnico ou mitigação em tasks/lessons.md."},
 	}
-
-	ramUsed, ramTotal, ramPct, swapUsed, swapTotal := readProcMeminfo()
 
 	osInfo := GetSystemOSInfo()
 
