@@ -24,6 +24,7 @@
 
 | Seção | Conteúdo & Foco |
 | :--- | :--- |
+| [🎯 Para Quem É Esta Plataforma](#publico-alvo) | Perfil do desenvolvedor, solopreneur e autodidata |
 | [🌱 1. A Dor, a Origem & o Propósito](#origem) | Da transição solo à criação do squad de agentes |
 | [🧭 2. O Que É o Nexus Ecosystem Open Source](#o-que-e) | Visão geral da plataforma aberta em Go puro |
 | [🏛️ 3. Arquitetura do Sistema](#arquitetura) | Diagrama conceitual do terminal, MCP e consoles |
@@ -35,6 +36,20 @@
 | [🚀 9. Quickstart em 3 Minutos](#quickstart) | Como clonar, compilar e rodar local ou na nuvem |
 | [📜 10. Licença Oficial](#licenca) | Termos de uso livre sob a Licença MIT |
 | [👨‍💻 Desenvolvedor & Arquiteto](#autor) | Perfil do autor, portfólio e redes de contato |
+
+---
+
+<a id="publico-alvo"></a>
+## 🎯 Para Quem É Esta Plataforma?
+
+O **Nexus Ecosystem (Open Source Edition)** foi forjado sob o princípio da **leveza e disciplina de engenharia em Go nativo**, atendendo especialmente:
+
+- 🚀 **Profissionais em Transição de Carreira & Autodidatas:** Desenvolvedores que encaram a solidão da bancada e sentem a falta de um dev sênior ou arquiteto experiente ao lado para revisar código, apontar causas-raiz e acelerar o aprendizado prático.
+- ☕ **Engenheiros de Software Solo & Solopreneurs:** Quem precisa gerenciar todas as pontas do produto sozinho — do backend concorrente e banco de dados até esteiras de testes, infraestrutura e segurança — sem sobrecarga de ferramentas pesadas.
+- ⚡ **Usuários de IA no Terminal (Claude Code, Antigravity CLI, Cursor):** Desenvolvedores que já utilizam agentes de inteligência artificial, mas buscam sair de prompts superficiais no navegador para operar com um **squad delimitado com papéis estritos, TDD e ferramentas reais via MCP**.
+- ☁️ **Quem Busca Custo Zero de Operação:** Profissionais que não querem queimar dinheiro com servidores pesados: o ecossistema roda com **menos de 20MB de RAM** no PC local ou em instâncias Always Free (Google Cloud / Oracle).
+
+<p align="right"><a href="#readme-top">▲ Voltar ao topo</a></p>
 
 ---
 
