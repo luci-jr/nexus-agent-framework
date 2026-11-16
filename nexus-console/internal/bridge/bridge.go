@@ -3,6 +3,7 @@ package bridge
 import (
 	"bytes"
 	"context"
+	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -65,6 +66,7 @@ type Bridge struct {
 	sessions       map[string]*Session
 	evolutionURL   string
 	evolutionToken string
+	ownerNumber    string
 	mu             sync.RWMutex
 }
 
@@ -79,10 +81,12 @@ func cleanPhoneNumber(raw string) string {
 func NewBridge(nexusDir string) *Bridge {
 	allowed := make(map[string]bool)
 
-	// Número do desenvolvedor como dono primário padrão
-	allowed["5511999990000"] = true
-
-	// Adiciona números extras configurados na variável de ambiente
+	// Números autorizados vêm só do ambiente: nenhum telefone fica no código.
+	// NEXUS_OWNER_WHATSAPP é o dono (destino padrão das respostas).
+	owner := cleanPhoneNumber(strings.TrimSpace(os.Getenv("NEXUS_OWNER_WHATSAPP")))
+	if owner != "" {
+		allowed[owner] = true
+	}
 	if envNums := os.Getenv("AUTHORIZED_WHATSAPP_NUMBERS"); envNums != "" {
 		for _, num := range strings.Split(envNums, ",") {
 			cleaned := cleanPhoneNumber(strings.TrimSpace(num))
@@ -100,14 +104,14 @@ func NewBridge(nexusDir string) *Bridge {
 	if evoURL == "" {
 		evoURL = "http://evolution_go:4000"
 	}
+	// Sem EVOLUTION_TOKEN o envio real fica desativado: nenhuma chave de API
+	// tem valor padrão no código.
 	evoToken := os.Getenv("EVOLUTION_TOKEN")
-	if evoToken == "" {
-		evoToken = "REDACTED_EVOLUTION_TOKEN"
-	}
 
 	b := &Bridge{
 		nexusDir:       nexusDir,
 		allowedNumbers: allowed,
+		ownerNumber:    owner,
 		authToken:      os.Getenv("BRIDGE_AUTH_TOKEN"),
 		defaultEngine:  "agy",
 		sessionsFile:   sessionsPath,
@@ -231,7 +235,8 @@ func (b *Bridge) Execute(ctx context.Context, req Request) (Response, error) {
 	}
 
 	// 1. Verificação de permissões do remetente
-	if len(b.allowedNumbers) > 0 && !b.allowedNumbers[sender] {
+	// Lista vazia = ninguém autorizado (antes, lista vazia liberava todo mundo).
+	if !b.allowedNumbers[sender] {
 		log.Printf("🚫 [NEXUS BRIDGE] Tentativa não autorizada do número: %s", sender)
 		return Response{
 			OK:       false,
@@ -386,23 +391,25 @@ func (b *Bridge) HandleWhatsApp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validação de token se configurado
-	if b.authToken != "" {
-		authHeader := r.Header.Get("Authorization")
-		token := strings.TrimPrefix(authHeader, "Bearer ")
-		if token == "" {
-			token = r.Header.Get("X-Bridge-Token")
-		}
-		if token == "" {
-			token = r.URL.Query().Get("token")
-		}
-
-		if token != b.authToken {
-			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			w.WriteHeader(http.StatusUnauthorized)
-			_ = json.NewEncoder(w).Encode(map[string]string{"error": "Não autorizado"})
-			return
-		}
+	// O token é obrigatório: esta rota entrega o texto recebido a um motor de
+	// IA com permissão de executar comandos. Sem BRIDGE_AUTH_TOKEN a ponte
+	// fica desligada.
+	if b.authToken == "" {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusServiceUnavailable)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Ponte desativada: defina BRIDGE_AUTH_TOKEN para habilitá-la."})
+		return
+	}
+	authHeader := r.Header.Get("Authorization")
+	token := strings.TrimPrefix(authHeader, "Bearer ")
+	if token == "" {
+		token = r.Header.Get("X-Bridge-Token")
+	}
+	if subtle.ConstantTimeCompare([]byte(token), []byte(b.authToken)) != 1 {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusUnauthorized)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Não autorizado"})
+		return
 	}
 
 	var req Request
@@ -490,6 +497,9 @@ func (b *Bridge) SendWhatsAppText(ctx context.Context, number, text string) (map
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	if b.evolutionToken == "" {
+		return nil, fmt.Errorf("EVOLUTION_TOKEN não definido: envio pelo WhatsApp desativado")
+	}
 	req.Header.Set("apikey", b.evolutionToken)
 
 	client := &http.Client{Timeout: 15 * time.Second}
@@ -539,7 +549,13 @@ func (b *Bridge) HandleSendReal(w http.ResponseWriter, r *http.Request) {
 
 	number := strings.TrimSpace(req.Number)
 	if number == "" {
-		number = "5511999990000" // Dono padrão
+		number = b.ownerNumber // Dono padrão (NEXUS_OWNER_WHATSAPP)
+	}
+	if number == "" {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Informe o número ou defina NEXUS_OWNER_WHATSAPP"})
+		return
 	}
 
 	res, err := b.SendWhatsAppText(r.Context(), number, text)
@@ -584,7 +600,7 @@ func (b *Bridge) HandleAskAndSend(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if strings.TrimSpace(req.Sender) == "" {
-		req.Sender = "5511999990000"
+		req.Sender = b.ownerNumber
 	}
 
 	// Resposta instantânea (<50ms) para não prender o navegador nem estourar o timeout de 100s do Cloudflare

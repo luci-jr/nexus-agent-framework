@@ -4,8 +4,12 @@ package sync
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -128,6 +132,20 @@ func (s *Syncer) HandleWebhookGitHub(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// O webhook dispara um git pull: só aceita chamadas assinadas pelo GitHub
+	// com o segredo GITHUB_WEBHOOK_SECRET (cabeçalho X-Hub-Signature-256).
+	segredo := os.Getenv("GITHUB_WEBHOOK_SECRET")
+	if segredo == "" {
+		http.Error(w, "Webhook desativado: defina GITHUB_WEBHOOK_SECRET", http.StatusServiceUnavailable)
+		return
+	}
+	corpo, err := io.ReadAll(io.LimitReader(r.Body, 5<<20))
+	if err != nil || !assinaturaValida(segredo, corpo, r.Header.Get("X-Hub-Signature-256")) {
+		log.Printf("🚫 [GIT WEBHOOK] Assinatura ausente ou inválida (origem: %s)", r.RemoteAddr)
+		http.Error(w, "Assinatura inválida", http.StatusUnauthorized)
+		return
+	}
+
 	event := r.Header.Get("X-GitHub-Event")
 	log.Printf("📥 [GIT WEBHOOK] Recebido evento GitHub: %s", event)
 
@@ -148,10 +166,26 @@ func (s *Syncer) HandleWebhookGitHub(w http.ResponseWriter, r *http.Request) {
 	log.Printf("✅ [GIT WEBHOOK] Repositório sincronizado instantaneamente: %s", out)
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
-		"ok":         true,
-		"message":    "Repositório sincronizado com sucesso a partir do GitHub",
-		"output":     out,
-		"event":      event,
-		"synced_at":  time.Now().Format(time.RFC3339),
+		"ok":        true,
+		"message":   "Repositório sincronizado com sucesso a partir do GitHub",
+		"output":    out,
+		"event":     event,
+		"synced_at": time.Now().Format(time.RFC3339),
 	})
+}
+
+// assinaturaValida confere o HMAC-SHA256 que o GitHub envia em
+// X-Hub-Signature-256 ("sha256=<hex>") sobre o corpo da requisição.
+func assinaturaValida(segredo string, corpo []byte, cabecalho string) bool {
+	const prefixo = "sha256="
+	if !strings.HasPrefix(cabecalho, prefixo) {
+		return false
+	}
+	recebida, err := hex.DecodeString(strings.TrimPrefix(cabecalho, prefixo))
+	if err != nil {
+		return false
+	}
+	mac := hmac.New(sha256.New, []byte(segredo))
+	mac.Write(corpo)
+	return hmac.Equal(recebida, mac.Sum(nil))
 }

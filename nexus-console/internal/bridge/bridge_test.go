@@ -14,7 +14,7 @@ func TestCleanPhoneNumber(t *testing.T) {
 		expected string
 	}{
 		{"5511999990000@s.whatsapp.net", "5511999990000"},
-		{"+55 (91) 8268-7350", "5511999990000"},
+		{"+55 (11) 99999-0000", "5511999990000"},
 		{"5511999990000", "5511999990000"},
 		{"user@c.us", ""},
 	}
@@ -84,13 +84,39 @@ func TestHandleWhatsAppHTTP(t *testing.T) {
 
 	// Payload JSON válido com comando /status
 	body := `{"sender":"5511999990000","text":"/status"}`
-	req := httptest.NewRequest(http.MethodPost, "/api/ponte/whatsapp", strings.NewReader(body))
-	w := httptest.NewRecorder()
+	chamar := func(token string) int {
+		req := httptest.NewRequest(http.MethodPost, "/api/ponte/whatsapp", strings.NewReader(body))
+		if token != "" {
+			req.Header.Set("Authorization", "Bearer "+token)
+		}
+		w := httptest.NewRecorder()
+		b.HandleWhatsApp(w, req)
+		return w.Result().StatusCode
+	}
 
-	b.HandleWhatsApp(w, req)
+	// Sem BRIDGE_AUTH_TOKEN configurado a ponte fica desligada.
+	b.authToken = ""
+	if got := chamar(""); got != http.StatusServiceUnavailable {
+		t.Errorf("sem token configurado esperava 503, obteve %d", got)
+	}
 
-	resp := w.Result()
-	if resp.StatusCode != http.StatusOK {
-		t.Errorf("Esperava status 200 OK, obteve %d", resp.StatusCode)
+	b.authToken = "token-de-teste"
+	if got := chamar(""); got != http.StatusUnauthorized {
+		t.Errorf("sem token na requisição esperava 401, obteve %d", got)
+	}
+	if got := chamar("errado"); got != http.StatusUnauthorized {
+		t.Errorf("token errado esperava 401, obteve %d", got)
+	}
+	if got := chamar("token-de-teste"); got != http.StatusOK {
+		t.Errorf("token certo esperava 200, obteve %d", got)
+	}
+}
+
+func TestListaVaziaNaoAutorizaNinguem(t *testing.T) {
+	b := NewBridge("/tmp")
+	b.allowedNumbers = map[string]bool{}
+	res, _ := b.Execute(context.Background(), Request{Sender: "5511999990000", Text: "/status"})
+	if res.OK {
+		t.Error("com a lista de números vazia ninguém deveria ser autorizado")
 	}
 }
