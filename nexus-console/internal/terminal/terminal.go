@@ -15,14 +15,15 @@ import (
 
 	"github.com/creack/pty"
 	"github.com/gorilla/websocket"
+	"github.com/luci-jr/nexus-console/internal/auth"
 )
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  4096,
 	WriteBufferSize: 4096,
-	CheckOrigin: func(r *http.Request) bool {
-		return true // Permite acesso via console web autenticado
-	},
+	// Só aceita o próprio console como origem; clientes sem navegador (o
+	// agente do túnel) não enviam Origin e passam pela autenticação normal.
+	CheckOrigin: auth.SameOrigin,
 }
 
 type resizeMessage struct {
@@ -33,7 +34,8 @@ type resizeMessage struct {
 
 // Handler gerencia sessões de terminal interativo via WebSockets (Cloud e Local Agent)
 type Handler struct {
-	nexusDir string
+	nexusDir  string
+	authorize func(*http.Request) bool
 
 	// Estado do agente do PC local
 	agentMu            sync.RWMutex
@@ -46,43 +48,19 @@ type Handler struct {
 	localScrollbackMu  sync.RWMutex
 }
 
-// NewHandler cria uma nova instância do gerenciador de terminal
-func NewHandler(nexusDir string) *Handler {
+// NewHandler cria uma nova instância do gerenciador de terminal. authorize é
+// a verificação de autenticação do console (auth.Manager.Authorized): o
+// terminal não tem segredo próprio nem senha padrão.
+func NewHandler(nexusDir string, authorize func(*http.Request) bool) *Handler {
 	return &Handler{
 		nexusDir:        nexusDir,
+		authorize:       authorize,
 		localScrollback: make([]byte, 0, 64*1024),
 	}
 }
 
 func (h *Handler) checkAuth(r *http.Request) bool {
-	if os.Getenv("CONSOLE_NO_AUTH") == "true" {
-		return true
-	}
-	expected := strings.TrimSpace(os.Getenv("CONSOLE_AUTH_TOKEN"))
-	if expected == "" {
-		expected = strings.TrimSpace(os.Getenv("NEXUS_AUTH_TOKEN"))
-	}
-	passFile := filepath.Join(h.nexusDir, ".console_pass")
-	if data, err := os.ReadFile(passFile); err == nil {
-		if p := strings.TrimSpace(string(data)); p != "" {
-			expected = p
-		}
-	}
-	if expected == "" {
-		expected = "REDACTED_DEFAULT_PASSWORD"
-	}
-
-	token := strings.TrimSpace(r.URL.Query().Get("token"))
-	if token == "" {
-		if cookie, err := r.Cookie("nexus_token"); err == nil {
-			token = strings.TrimSpace(cookie.Value)
-		}
-	}
-	if token == "" {
-		authHeader := r.Header.Get("Authorization")
-		token = strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
-	}
-	return token != "" && token == expected
+	return h.authorize != nil && h.authorize(r)
 }
 
 // IsAgentConnected verifica se o agente do PC local está conectado à nuvem
@@ -224,7 +202,8 @@ func (h *Handler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 			}
 			awsHost := os.Getenv("NEXUS_AWS_HOST")
 			if awsHost == "" {
-				awsHost = "192.0.2.1"
+				_ = conn.WriteMessage(websocket.TextMessage, []byte("Defina NEXUS_AWS_HOST com o endereço do seu servidor para usar o terminal da nuvem.\r\n"))
+				return
 			}
 			awsUser := os.Getenv("NEXUS_AWS_USER")
 			if awsUser == "" {

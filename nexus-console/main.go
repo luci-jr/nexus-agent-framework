@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/luci-jr/nexus-console/internal/auth"
 	"github.com/luci-jr/nexus-console/internal/bridge"
 	"github.com/luci-jr/nexus-console/internal/parser"
 	"github.com/luci-jr/nexus-console/internal/sync"
@@ -55,8 +56,11 @@ func determineNexusDir() string {
 		}
 		return parentDir
 	}
-	// Caminho canônico na máquina de desenvolvimento
-	return "/home/lucivaldo-junior/Documentos/GitHub/projetos/nexus-ecosystem"
+	// Sem pistas: usa o diretório atual
+	if abs, err := filepath.Abs("."); err == nil {
+		return abs
+	}
+	return "."
 }
 
 func jsonResponse(w http.ResponseWriter, data interface{}, statusCode int) {
@@ -67,64 +71,65 @@ func jsonResponse(w http.ResponseWriter, data interface{}, statusCode int) {
 	}
 }
 
-func getMasterToken() string {
-	nexusDir := determineNexusDir()
-	passFile := filepath.Join(nexusDir, ".console_pass")
-	if data, err := os.ReadFile(passFile); err == nil {
-		p := strings.TrimSpace(string(data))
-		if p != "" {
-			return p
-		}
-	}
+// authMgr concentra senha mestra, sessões e limite de tentativas (internal/auth).
+var authMgr *auth.Manager
 
-	t := strings.TrimSpace(os.Getenv("CONSOLE_AUTH_TOKEN"))
-	if t == "" {
-		t = strings.TrimSpace(os.Getenv("NEXUS_AUTH_TOKEN"))
-	}
-	if t == "" {
-		t = "REDACTED_DEFAULT_PASSWORD"
-	}
-	return t
-}
+// consolePrivado, quando CONSOLE_PRIVATE=true, exige login também nas rotas de
+// leitura (tarefas, ADRs, grafo, status, anexos e conteúdo).
+var consolePrivado = os.Getenv("CONSOLE_PRIVATE") == "true"
 
 func isAuthorized(r *http.Request) bool {
-	if os.Getenv("CONSOLE_NO_AUTH") == "true" {
-		return true
-	}
-	expected := getMasterToken()
-	authHeader := r.Header.Get("Authorization")
-	provided := strings.TrimPrefix(authHeader, "Bearer ")
-	if provided == "" {
-		provided = r.URL.Query().Get("token")
-	}
-	if provided == "" {
-		if cookie, err := r.Cookie("nexus_token"); err == nil {
-			provided = cookie.Value
-		}
-	}
-	return provided == expected
+	return authMgr.Authorized(r)
+}
+
+func naoAutorizado(w http.ResponseWriter) {
+	jsonResponse(w, map[string]interface{}{
+		"ok":    false,
+		"error": "Acesso não autorizado. Faça login com a Chave Mestra do Nexus para acessar este recurso.",
+		"code":  "UNAUTHORIZED",
+	}, http.StatusUnauthorized)
 }
 
 // requireAuth protege rotas confidenciais (Vault, Terminal, WhatsApp, Deletar)
 func requireAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !isAuthorized(r) {
-			jsonResponse(w, map[string]interface{}{
-				"ok":    false,
-				"error": "Acesso não autorizado. Faça login com a Chave Mestra do Nexus para acessar este recurso.",
-				"code":  "UNAUTHORIZED",
-			}, http.StatusUnauthorized)
+			naoAutorizado(w)
 			return
 		}
 		next(w, r)
 	}
 }
 
+// authMiddleware cobre as rotas de leitura: públicas por padrão (modo
+// visitante), protegidas quando CONSOLE_PRIVATE=true.
 func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Middleware geral permissivo para rotas públicas
+		if consolePrivado && !isAuthorized(r) {
+			naoAutorizado(w)
+			return
+		}
 		next(w, r)
 	}
+}
+
+// protegerSePrivado aplica a mesma regra a handlers de arquivos estáticos.
+func protegerSePrivado(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if consolePrivado && !isAuthorized(r) {
+			naoAutorizado(w)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// nomeAdmin é o nome mostrado para o usuário autenticado (CONSOLE_USER).
+func nomeAdmin() string {
+	if u := strings.TrimSpace(os.Getenv("CONSOLE_USER")); u != "" {
+		return u
+	}
+	return "admin"
 }
 
 func main() {
@@ -132,7 +137,24 @@ func main() {
 	syncer := sync.NewSyncer(nexusDir)
 	port := os.Getenv("CONSOLE_PORT")
 	if port == "" {
+		port = os.Getenv("PORT")
+	}
+	if port == "" {
 		port = "8090"
+	}
+
+	var senhaGerada string
+	var errAuth error
+	authMgr, senhaGerada, errAuth = auth.New(nexusDir)
+	if errAuth != nil {
+		log.Fatalf("Falha ao inicializar a autenticação: %v", errAuth)
+	}
+	if senhaGerada != "" {
+		log.Printf("🔐 [NEXUS AUTH] Nenhuma senha configurada. Senha mestra gerada para esta instalação: %s", senhaGerada)
+		log.Printf("🔐 [NEXUS AUTH] Guarde-a agora. Para definir a sua, use CONSOLE_PASSWORD ou o arquivo .console_pass.")
+	}
+	if authMgr.NoAuth() {
+		log.Printf("⚠️ [NEXUS AUTH] CONSOLE_NO_AUTH=true: console SEM autenticação. Use apenas em localhost.")
 	}
 
 	log.Printf("🌌 [NEXUS CONSOLE] Inicializando servidor web em Go...")
@@ -237,68 +259,83 @@ func main() {
 
 	// 🔐 Módulo 0: Autenticação & Sessão do Console
 	mux.HandleFunc("POST /api/auth/login", func(w http.ResponseWriter, r *http.Request) {
+		cliente := auth.ClientKey(r)
+		if bloqueado, resta := authMgr.Locked(cliente); bloqueado {
+			w.Header().Set("Retry-After", fmt.Sprintf("%d", int(resta.Seconds())+1))
+			jsonResponse(w, map[string]interface{}{
+				"ok":    false,
+				"error": "Muitas tentativas. Aguarde um minuto e tente de novo.",
+			}, http.StatusTooManyRequests)
+			return
+		}
+
 		var payload struct {
 			Password string `json:"password"`
 			Token    string `json:"token"`
 		}
-		_ = json.NewDecoder(r.Body).Decode(&payload)
+		_ = json.NewDecoder(io.LimitReader(r.Body, 4096)).Decode(&payload)
 		provided := strings.TrimSpace(payload.Password)
 		if provided == "" {
 			provided = strings.TrimSpace(payload.Token)
 		}
-		expected := getMasterToken()
-		if provided == "" || provided != expected {
+		if !authMgr.CheckPassword(provided) {
+			authMgr.RecordFailure(cliente)
 			jsonResponse(w, map[string]interface{}{
 				"ok":    false,
 				"error": "Chave Mestra ou Senha incorreta.",
 			}, http.StatusUnauthorized)
 			return
 		}
+		authMgr.RecordSuccess(cliente)
 
-		http.SetCookie(w, &http.Cookie{
-			Name:     "nexus_token",
-			Value:    expected,
-			Path:     "/",
-			HttpOnly: false,
-			SameSite: http.SameSiteLaxMode,
-			MaxAge:   86400 * 30, // 30 dias
-		})
+		// O navegador recebe um token de sessão aleatório, nunca a senha.
+		sessao, err := authMgr.NewSession()
+		if err != nil {
+			jsonResponse(w, map[string]interface{}{"ok": false, "error": "Falha ao criar sessão."}, http.StatusInternalServerError)
+			return
+		}
+		auth.SetCookie(w, r, sessao)
 
 		jsonResponse(w, map[string]interface{}{
 			"ok":    true,
-			"token": expected,
-			"user":  "Lucivaldo Junior",
+			"token": sessao,
+			"user":  nomeAdmin(),
 			"role":  "admin",
 		}, http.StatusOK)
 	})
 
-	// 🔐 Módulo 0.1: Login sob Demanda via Google OAuth (Traefik ForwardAuth Callback)
+	// 🔐 Módulo 0.1: Login via Traefik ForwardAuth (opcional).
+	// Só existe quando CONSOLE_FORWARD_AUTH=true E o proxy já autenticou o
+	// usuário (cabeçalho X-Forwarded-User, que o Traefik deve sobrescrever).
+	// Sem isso a rota responde 404: ela não pode entregar sessão a qualquer um.
 	mux.HandleFunc("GET /auth/google", func(w http.ResponseWriter, r *http.Request) {
-		expected := getMasterToken()
-		http.SetCookie(w, &http.Cookie{
-			Name:     "nexus_token",
-			Value:    expected,
-			Path:     "/",
-			HttpOnly: false,
-			SameSite: http.SameSiteLaxMode,
-			MaxAge:   86400 * 30, // 30 dias de sessão ativa
-		})
+		if os.Getenv("CONSOLE_FORWARD_AUTH") != "true" || strings.TrimSpace(r.Header.Get("X-Forwarded-User")) == "" {
+			http.NotFound(w, r)
+			return
+		}
+		sessao, err := authMgr.NewSession()
+		if err != nil {
+			http.Error(w, "Falha ao criar sessão", http.StatusInternalServerError)
+			return
+		}
+		auth.SetCookie(w, r, sessao)
 		http.Redirect(w, r, "/?auth=google_success", http.StatusTemporaryRedirect)
 	})
 
 	mux.HandleFunc("GET /api/auth/status", func(w http.ResponseWriter, r *http.Request) {
-		isNoAuth := os.Getenv("CONSOLE_NO_AUTH") == "true"
-		auth := isAuthorized(r) || isNoAuth
+		isNoAuth := authMgr.NoAuth()
+		autenticado := isAuthorized(r)
 		role := "guest"
 		name := "Visitante"
 		token := ""
-		if auth {
+		if autenticado {
 			role = "admin"
-			name = "Lucivaldo Junior"
-			token = getMasterToken()
+			name = nomeAdmin()
+			// Devolve apenas o token de sessão que o próprio cliente apresentou.
+			token = authMgr.SessionToken(r)
 		}
 		jsonResponse(w, map[string]interface{}{
-			"authenticated": auth,
+			"authenticated": autenticado,
 			"no_auth_mode":  isNoAuth,
 			"token":         token,
 			"user":          map[string]interface{}{"name": name, "role": role},
@@ -307,39 +344,35 @@ func main() {
 
 	// 🔐 Módulo 0.2: Logout Global do Console e ForwardAuth
 	logoutHandler := func(w http.ResponseWriter, r *http.Request) {
+		authMgr.DropSession(auth.TokenFromRequest(r))
 		epoch := time.Unix(0, 0)
-		for _, domain := range []string{"", "lucivaldo.cloud", ".lucivaldo.cloud"} {
+		dominios := []string{""}
+		if d := strings.TrimSpace(os.Getenv("CONSOLE_COOKIE_DOMAIN")); d != "" {
+			dominios = append(dominios, d, "."+strings.TrimPrefix(d, "."))
+		}
+		for _, domain := range dominios {
 			http.SetCookie(w, &http.Cookie{
-				Name:     "nexus_token",
-				Value:    "",
-				Path:     "/",
-				Domain:   domain,
-				HttpOnly: false,
-				MaxAge:   -1,
-				Expires:  epoch,
-			})
-			http.SetCookie(w, &http.Cookie{
-				Name:     "_forward_auth",
+				Name:     auth.CookieName,
 				Value:    "",
 				Path:     "/",
 				Domain:   domain,
 				HttpOnly: true,
-				Secure:   true,
-				SameSite: http.SameSiteLaxMode,
 				MaxAge:   -1,
 				Expires:  epoch,
 			})
-			http.SetCookie(w, &http.Cookie{
-				Name:     "_forward_auth_csrf",
-				Value:    "",
-				Path:     "/",
-				Domain:   domain,
-				HttpOnly: true,
-				Secure:   true,
-				SameSite: http.SameSiteLaxMode,
-				MaxAge:   -1,
-				Expires:  epoch,
-			})
+			for _, nome := range []string{"_forward_auth", "_forward_auth_csrf"} {
+				http.SetCookie(w, &http.Cookie{
+					Name:     nome,
+					Value:    "",
+					Path:     "/",
+					Domain:   domain,
+					HttpOnly: true,
+					Secure:   true,
+					SameSite: http.SameSiteLaxMode,
+					MaxAge:   -1,
+					Expires:  epoch,
+				})
+			}
 		}
 		if r.Method == http.MethodPost {
 			jsonResponse(w, map[string]interface{}{"ok": true}, http.StatusOK)
@@ -356,38 +389,32 @@ func main() {
 			CurrentPassword string `json:"current_password"`
 			NewPassword     string `json:"new_password"`
 		}
-		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		if err := json.NewDecoder(io.LimitReader(r.Body, 4096)).Decode(&payload); err != nil {
 			jsonResponse(w, map[string]interface{}{"ok": false, "error": "JSON inválido"}, http.StatusBadRequest)
 			return
 		}
-		expected := getMasterToken()
-		if strings.TrimSpace(payload.CurrentPassword) != expected {
+		if !authMgr.CheckPassword(payload.CurrentPassword) {
 			jsonResponse(w, map[string]interface{}{"ok": false, "error": "Senha atual incorreta."}, http.StatusUnauthorized)
 			return
 		}
-		newPass := strings.TrimSpace(payload.NewPassword)
-		if len(newPass) < 4 {
-			jsonResponse(w, map[string]interface{}{"ok": false, "error": "A nova senha deve ter no mínimo 4 caracteres."}, http.StatusBadRequest)
-			return
-		}
-
-		passFile := filepath.Join(nexusDir, ".console_pass")
-		if err := os.WriteFile(passFile, []byte(newPass), 0600); err != nil {
+		if err := authMgr.SetPassword(payload.NewPassword); err != nil {
+			if err == auth.ErrSenhaFraca {
+				jsonResponse(w, map[string]interface{}{"ok": false, "error": err.Error()}, http.StatusBadRequest)
+				return
+			}
 			jsonResponse(w, map[string]interface{}{"ok": false, "error": fmt.Sprintf("Erro ao salvar senha no disco: %v", err)}, http.StatusInternalServerError)
 			return
 		}
 
-		// Atualiza o cookie de sessão com a nova senha
-		http.SetCookie(w, &http.Cookie{
-			Name:     "nexus_token",
-			Value:    newPass,
-			Path:     "/",
-			HttpOnly: false,
-			SameSite: http.SameSiteLaxMode,
-			MaxAge:   86400 * 30,
-		})
+		// A troca derruba todas as sessões; esta continua com um token novo.
+		sessao, err := authMgr.NewSession()
+		if err != nil {
+			jsonResponse(w, map[string]interface{}{"ok": false, "error": "Senha alterada, mas falhou ao recriar a sessão. Faça login de novo."}, http.StatusInternalServerError)
+			return
+		}
+		auth.SetCookie(w, r, sessao)
 
-		jsonResponse(w, map[string]interface{}{"ok": true, "message": "Senha mestra alterada com sucesso!"}, http.StatusOK)
+		jsonResponse(w, map[string]interface{}{"ok": true, "token": sessao, "message": "Senha mestra alterada com sucesso!"}, http.StatusOK)
 	}))
 
 	// API: Leitura Segura de Documento Markdown do Nexus (Restrito)
@@ -657,7 +684,7 @@ func main() {
 	// 📎 Servidor de Anexos do Kanban (Modo Detalhes do Card)
 	tasksAttDir := filepath.Join(nexusDir, "tasks", "attachments")
 	_ = os.MkdirAll(tasksAttDir, 0755)
-	mux.Handle("GET /tasks/attachments/", http.StripPrefix("/tasks/attachments/", http.FileServer(http.Dir(tasksAttDir))))
+	mux.Handle("GET /tasks/attachments/", protegerSePrivado(http.StripPrefix("/tasks/attachments/", http.FileServer(http.Dir(tasksAttDir)))))
 
 	// 📋 Módulo Tarefas: Obter Detalhes do Card
 	mux.HandleFunc("GET /api/tasks/details", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
@@ -909,7 +936,7 @@ func main() {
 	mux.HandleFunc("GET /api/ponte/sessions", requireAuth(bridgeHandler.HandleSessions))
 
 	// 💻 Módulo 2: Terminal Web Interativo (PTY + WebSocket) e Túnel Reverso PC Local
-	termHandler := terminal.NewHandler(nexusDir)
+	termHandler := terminal.NewHandler(nexusDir, authMgr.Authorized)
 	mux.HandleFunc("GET /ws/terminal", termHandler.HandleWebSocket)
 	mux.HandleFunc("GET /ws/tunnel/agent", termHandler.HandleAgentTunnel)
 	mux.HandleFunc("GET /api/terminal/status", func(w http.ResponseWriter, r *http.Request) {
@@ -925,7 +952,7 @@ func main() {
 	// 🎬 Módulo 3: Servidor de Conteúdos Estáticos (Vídeos, Carrosséis e Thumbnails)
 	conteudoDir := filepath.Join(nexusDir, "conteudo")
 	_ = os.MkdirAll(conteudoDir, 0755)
-	mux.Handle("GET /conteudo/", http.StripPrefix("/conteudo/", http.FileServer(http.Dir(conteudoDir))))
+	mux.Handle("GET /conteudo/", protegerSePrivado(http.StripPrefix("/conteudo/", http.FileServer(http.Dir(conteudoDir)))))
 
 	// 🎬 API: Listar Conteúdos Gerados
 	mux.HandleFunc("GET /api/conteudo", authMiddleware(func(w http.ResponseWriter, r *http.Request) {

@@ -51,7 +51,8 @@ func resolveToken(tokenFlag string) string {
 			}
 		}
 	}
-	return "REDACTED_DEFAULT_PASSWORD"
+	// Sem senha padrão: o agente não se conecta sem credencial explícita.
+	return ""
 }
 
 func main() {
@@ -61,6 +62,9 @@ func main() {
 	flag.Parse()
 
 	masterToken := resolveToken(*token)
+	if masterToken == "" {
+		log.Fatal("Nenhuma credencial encontrada. Use -token, NEXUS_AUTH_TOKEN ou um arquivo .console_pass.")
+	}
 
 	log.Printf("🌌 [NEXUS AGENT v%s] Inicializando agente reverso de terminal local...", AgentVersion)
 	log.Printf("🔗 [NEXUS AGENT] Servidor alvo: %s", *serverURL)
