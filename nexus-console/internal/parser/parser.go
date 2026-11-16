@@ -492,23 +492,18 @@ func GetSystemStatus(nexusDir string) SystemStatus {
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 
-		traefikHost := os.Getenv("TRAEFIK_TCP_TARGET")
-		if traefikHost == "" {
-			traefikHost = "192.0.2.1:80"
-		}
-		redisHost := os.Getenv("REDIS_TCP_TARGET")
-		if redisHost == "" {
-			redisHost = "192.0.2.1:6379"
-		}
-		pgHost := os.Getenv("POSTGRES_TCP_TARGET")
-		if pgHost == "" {
-			pgHost = "db.example.internal:5432"
-		}
-
-		tcpTargets := map[string]string{
-			"postgres": pgHost,
-			"traefik":  traefikHost,
-			"redis":    redisHost,
+		// Alvos de checagem vêm só do ambiente: nenhum IP ou host de
+		// infraestrutura real fica no código. Alvo não configurado não é
+		// checado.
+		tcpTargets := map[string]string{}
+		for chave, variavel := range map[string]string{
+			"postgres": "POSTGRES_TCP_TARGET",
+			"traefik":  "TRAEFIK_TCP_TARGET",
+			"redis":    "REDIS_TCP_TARGET",
+		} {
+			if alvo := strings.TrimSpace(os.Getenv(variavel)); alvo != "" {
+				tcpTargets[chave] = alvo
+			}
 		}
 
 		for key, addr := range tcpTargets {
