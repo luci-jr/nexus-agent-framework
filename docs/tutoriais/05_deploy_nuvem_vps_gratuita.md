@@ -90,11 +90,13 @@ NEXUS_DOMAIN=nexus.seudominio.com
 # Seu e-mail real para o Let's Encrypt:
 ACME_EMAIL=seu-email@dominio.com
 
-# Suas credenciais de login no painel:
+# Suas credenciais de login no painel.
+# A senha é obrigatória e precisa ter 12 caracteres ou mais.
+# Gere uma com: openssl rand -hex 16
 CONSOLE_USER=admin
-CONSOLE_PASSWORD=sua_senha_super_segura_aqui
+CONSOLE_PASSWORD=cole_aqui_a_senha_gerada
 
-PORT=8090
+CONSOLE_PORT=8090
 NEXUS_ENV=production
 ```
 *(Salve com `Ctrl + O`, `Enter` e saia com `Ctrl + X`)*.
@@ -125,7 +127,7 @@ Abra o navegador e acerte o endereço:
 👉 `https://nexus.seudominio.com`
 
 * O Traefik redirecionará automaticamente qualquer chamada HTTP para HTTPS seguro.
-* Digite seu usuário e senha configurados no `.env`.
+* Digite a senha (`CONSOLE_PASSWORD`) configurada no `.env`.
 * Pronto! Seu **Nexus Web Console** está no ar 24/7 com telemetria, squad de copilotos e governança no bolso!
 
 ---

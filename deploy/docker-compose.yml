@@ -38,10 +38,12 @@ services:
     container_name: nexus-console
     restart: unless-stopped
     environment:
-      - PORT=8090
+      - CONSOLE_PORT=8090
       - NEXUS_ENV=production
       - CONSOLE_USER=${CONSOLE_USER:-admin}
-      - CONSOLE_PASSWORD=${CONSOLE_PASSWORD:-nexus2026}
+      # Sem senha padrão: o compose recusa subir se CONSOLE_PASSWORD estiver vazia.
+      - CONSOLE_PASSWORD=${CONSOLE_PASSWORD:?Defina CONSOLE_PASSWORD em deploy/.env}
+      - CONSOLE_PRIVATE=${CONSOLE_PRIVATE:-true}
       - NEXUS_DIR=/nexus
     volumes:
       - "../:/nexus:ro"
