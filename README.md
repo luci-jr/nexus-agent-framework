@@ -15,6 +15,8 @@
 [![MCP Spec](https://img.shields.io/badge/Protocol-MCP%20v3.1-8A2BE2?style=for-the-badge)](https://modelcontextprotocol.io/)
 [![Memory](https://img.shields.io/badge/RAM-%3C%2020MB-success?style=for-the-badge)](https://github.com/luci-jr/nexus-ecosystem-open)
 [![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen.svg?style=for-the-badge)](https://github.com/luci-jr/nexus-ecosystem-open/pulls)
+[![CI](https://github.com/luci-jr/nexus-ecosystem-open/actions/workflows/ci.yml/badge.svg)](https://github.com/luci-jr/nexus-ecosystem-open/actions/workflows/ci.yml)
+[![Security Policy](https://img.shields.io/badge/Security-Policy-blue.svg?style=for-the-badge)](SECURITY.md)
 
 </div>
 
@@ -301,8 +303,15 @@ Acesse o **Nexus Web Console** no smartphone quando estiver na rua ou viajando:
 git clone https://github.com/luci-jr/nexus-ecosystem-open.git
 cd nexus-ecosystem-open
 
+# 2. Configurar o ambiente (opcional - gera senha forte automática se omitida):
+cp .env.example .env
+# Defina CONSOLE_PASSWORD=sua-senha (mínimo 12 caracteres) ou deixe vazio para gerar na inicialização.
+
 # Opção A — Executar Localmente (Nativo em Go, < 20MB de RAM, sem Docker):
 make build && make run-console
+
+# Opção B — Executar via Docker Compose:
+docker compose up --build
 
 # Opção B — Executar com Assistente Dual-Mode (Local ou Nuvem VPS):
 ./deploy/setup.sh
